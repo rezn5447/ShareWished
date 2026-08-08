@@ -1,0 +1,90 @@
+import { Wishlist } from '@/types/wishlist'
+export const seedWishlists: Wishlist[] = [
+  {
+    id: 'list-1',
+    ownerId: 'me',
+    ownerName: 'Maya Ellis',
+    title: 'The Big 30',
+    occasion: 'Birthday',
+    eventDate: '2026-09-12',
+    note: 'No pressure at all — mostly just things I keep almost buying myself.',
+    cover: 'birthday',
+    shareId: 'maya-30',
+    createdAt: '2026-07-02',
+    items: [
+      {
+        id: 'item-1',
+        title: 'Studio Wireless Noise-Cancelling Headphones',
+        url: 'https://www.amazon.com/dp/headphones-studio',
+        retailer: 'Amazon',
+        image:
+          'https://cdn.magicpatterns.com/patterns/generated-images/0a8e3950-8dcf-40d1-afb9-7c4c5dc37b8c.jpg',
+        price: 279,
+        note: 'Black, please — the white ones scuff.',
+        priority: 'must',
+        addedAt: '2026-07-02',
+        purchase: { by: 'Jonah', at: '2026-07-28' },
+      },
+      {
+        id: 'item-2',
+        title: 'Instant Film Camera — Silver',
+        url: 'https://www.target.com/p/instant-camera',
+        retailer: 'Target',
+        image:
+          'https://cdn.magicpatterns.com/patterns/generated-images/50074596-87a7-4b48-a326-b1489ca462ec.jpg',
+        price: 119,
+        priority: 'normal',
+        addedAt: '2026-07-05',
+      },
+      {
+        id: 'item-3',
+        title: 'Slow Sundays: A Cookbook for Long Mornings',
+        url: 'https://bookshop.org/p/slow-sundays-cookbook',
+        retailer: 'Bookshop',
+        image:
+          'https://cdn.magicpatterns.com/patterns/generated-images/2e6645e0-2b19-4e05-a062-cd271270b0b5.jpg',
+        price: 35,
+        note: 'Any edition works.',
+        priority: 'low',
+        addedAt: '2026-07-11',
+        purchase: { by: 'Aunt Rosa', at: '2026-08-01' },
+      },
+      {
+        id: 'item-4',
+        title: 'Everyday Runner — Sage / Bone',
+        url: 'https://www.nike.com/t/everyday-runner-shoe',
+        retailer: 'Nike',
+        image:
+          'https://cdn.magicpatterns.com/patterns/generated-images/4f3c0583-cccd-47cd-9a06-4ea9081f4d10.jpg',
+        price: 132,
+        note: "Women's 8.5",
+        priority: 'must',
+        addedAt: '2026-07-19',
+      },
+    ],
+  },
+  {
+    id: 'list-2',
+    ownerId: 'me',
+    ownerName: 'Maya Ellis',
+    title: 'New Apartment',
+    occasion: 'Housewarming',
+    cover: 'home',
+    shareId: 'maya-apartment',
+    createdAt: '2026-06-14',
+    note: 'Slowly filling a very empty kitchen.',
+    items: [
+      {
+        id: 'item-5',
+        title: 'Speckled Stoneware Mug Set (2)',
+        url: 'https://www.westelm.com/products/speckled-mug-set',
+        retailer: 'Westelm',
+        image:
+          'https://cdn.magicpatterns.com/patterns/generated-images/5d7c83a8-4519-4326-8c48-b4293e137eb5.jpg',
+        price: 48,
+        priority: 'normal',
+        addedAt: '2026-06-14',
+      },
+    ],
+  },
+]
