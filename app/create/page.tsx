@@ -6,30 +6,37 @@ import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 import { BottomNav } from '@/components/BottomNav'
 import { covers } from '@/data/covers'
-import { useWishlists } from '@/contexts/WishlistContext'
+import { useWishlistApi } from '@/lib/wishlist-api'
 import { CoverKey } from '@/types/wishlist'
 
 export default function CreateList() {
-  const { createList } = useWishlists()
+  const api = useWishlistApi()
   const { user } = useUser()
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [cover, setCover] = useState<CoverKey>('birthday')
   const [eventDate, setEventDate] = useState('')
   const [note, setNote] = useState('')
-  const handleSubmit = (event: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false)
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!title.trim()) return
-    const selected = covers.find((option) => option.key === cover)
-    const list = createList({
-      title: title.trim(),
-      occasion: selected?.label ?? 'Just because',
-      eventDate: eventDate || undefined,
-      note: note.trim() || undefined,
-      cover,
-      ownerName: user?.fullName ?? 'A friend',
-    })
-    router.push(`/list/${list.id}`)
+    if (!title.trim() || !user || submitting) return
+    setSubmitting(true)
+    try {
+      const selected = covers.find((option) => option.key === cover)
+      const list = await api.createList({
+        title: title.trim(),
+        occasion: selected?.label ?? 'Just because',
+        eventDate: eventDate || undefined,
+        note: note.trim() || undefined,
+        cover,
+        ownerId: user.id,
+        ownerName: user.fullName ?? 'A friend',
+      })
+      router.push(`/list/${list.id}`)
+    } finally {
+      setSubmitting(false)
+    }
   }
   return (
     <MobileScreen>
@@ -98,9 +105,10 @@ export default function CreateList() {
         </div>
         <button
           type="submit"
-          className="w-full rounded-full bg-accent py-4 text-sm font-semibold text-white transition active:scale-[0.99]"
+          disabled={submitting}
+          className="w-full rounded-full bg-accent py-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-40"
         >
-          Create list
+          {submitting ? 'Creating…' : 'Create list'}
         </button>
       </form>
       <BottomNav />

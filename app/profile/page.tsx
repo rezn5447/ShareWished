@@ -1,13 +1,14 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BellIcon, EyeOffIcon, HelpCircleIcon, LogOutIcon, ShieldIcon } from 'lucide-react'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 import { BottomNav } from '@/components/BottomNav'
-import { useWishlists } from '@/contexts/WishlistContext'
+import { useWishlistApi } from '@/lib/wishlist-api'
 import { initials } from '@/utils/format'
+import { Wishlist } from '@/types/wishlist'
 const rows = [
   { Icon: BellIcon, label: 'Notifications', hint: 'New items, shared lists' },
   { Icon: ShieldIcon, label: 'Privacy', hint: 'Who can open your links' },
@@ -17,8 +18,15 @@ const rows = [
 export default function Profile() {
   const { user } = useUser()
   const { signOut } = useClerk()
-  const { myLists } = useWishlists()
+  const api = useWishlistApi()
   const router = useRouter()
+  const [myLists, setMyLists] = useState<Wishlist[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    api.fetchMyLists(user.id).then(setMyLists)
+  }, [user, api])
+
   const itemCount = myLists.reduce((sum, list) => sum + list.items.length, 0)
   const handleSignOut = () => {
     signOut(() => router.push('/'))

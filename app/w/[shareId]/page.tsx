@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -8,16 +8,28 @@ import { MobileScreen } from '@/components/MobileScreen'
 import { ItemCard } from '@/components/ItemCard'
 import { ClaimSheet } from '@/components/ClaimSheet'
 import { useWishlists } from '@/contexts/WishlistContext'
+import { useWishlistApi } from '@/lib/wishlist-api'
 import { getCover } from '@/data/covers'
 import { daysUntil, formatEventDate } from '@/utils/format'
+import { Wishlist } from '@/types/wishlist'
 type Filter = 'available' | 'all'
 export default function SharedList() {
   const { shareId } = useParams<{ shareId: string }>()
-  const { getSharedList, markPurchased, undoPurchase, gifterName, setGifterName } = useWishlists()
+  const { gifterName, setGifterName } = useWishlists()
+  const api = useWishlistApi()
   const [filter, setFilter] = useState<Filter>('available')
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [toast, setToast] = useState('')
-  const list = getSharedList(shareId)
+  const [list, setList] = useState<Wishlist | null | undefined>(undefined)
+
+  const refresh = useCallback(() => {
+    api.fetchSharedList(shareId).then(setList)
+  }, [api, shareId])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
   const items = useMemo(() => {
     if (!list) return []
     const sorted = [...list.items].sort(
@@ -26,6 +38,17 @@ export default function SharedList() {
     return filter === 'available' ? sorted.filter((item) => !item.purchase) : sorted
   }, [list, filter])
   const claiming = list?.items.find((item) => item.id === claimingId) ?? null
+
+  if (list === undefined) {
+    return (
+      <MobileScreen padBottom={false}>
+        <div className="animate-pulse space-y-3 px-5 pt-10">
+          <div className="h-40 rounded-xl2 bg-paper/60" />
+          <div className="h-20 rounded-xl2 bg-paper/60" />
+        </div>
+      </MobileScreen>
+    )
+  }
   if (!list) {
     return (
       <MobileScreen padBottom={false}>
@@ -45,12 +68,13 @@ export default function SharedList() {
   const days = daysUntil(list.eventDate)
   const claimedCount = list.items.filter((item) => item.purchase).length
   const firstName = list.ownerName.split(' ')[0]
-  const confirmClaim = (name: string) => {
+  const confirmClaim = async (name: string) => {
     if (!claiming) return
     setGifterName(name)
-    markPurchased(shareId, claiming.id, name)
+    await api.markPurchased(claiming.id, name)
     setToast(`Locked in. ${firstName} won't see a thing.`)
     setClaimingId(null)
+    refresh()
     window.setTimeout(() => setToast(''), 3200)
   }
   return (
@@ -123,7 +147,7 @@ export default function SharedList() {
                     item.purchase && gifterName && item.purchase.by === gifterName,
                   )}
                   onClaim={(claimed) => setClaimingId(claimed.id)}
-                  onUndo={() => undoPurchase(shareId, item.id)}
+                  onUndo={() => api.undoPurchase(item.id).then(refresh)}
                 />
               ))}
             </AnimatePresence>

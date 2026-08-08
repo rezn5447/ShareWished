@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { AlertCircleIcon, LinkIcon, Loader2Icon } from 'lucide-react'
 import { Sheet } from './Sheet'
-import { NewItemInput } from '@/contexts/WishlistContext'
+import { NewItemInput } from '@/lib/wishlist-api'
 import { LinkPreview, Priority } from '@/types/wishlist'
 import { fetchLinkPreview } from '@/utils/linkPreview'
 interface AddItemSheetProps {

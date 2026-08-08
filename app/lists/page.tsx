@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { PlusIcon, SparklesIcon } from 'lucide-react'
@@ -7,12 +7,33 @@ import { useUser } from '@clerk/nextjs'
 import { MobileScreen } from '@/components/MobileScreen'
 import { BottomNav } from '@/components/BottomNav'
 import { ListCard } from '@/components/ListCard'
-import { useWishlists } from '@/contexts/WishlistContext'
+import { useWishlistApi } from '@/lib/wishlist-api'
+import { Wishlist } from '@/types/wishlist'
 
 export default function Lists() {
   const { user } = useUser()
-  const { myLists } = useWishlists()
+  const api = useWishlistApi()
+  const [myLists, setMyLists] = useState<Wishlist[]>([])
+  const [loading, setLoading] = useState(true)
   const firstName = user?.firstName ?? 'there'
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    setLoading(true)
+    api
+      .fetchMyLists(user.id)
+      .then((lists) => {
+        if (!cancelled) setMyLists(lists)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user, api])
+
   return (
     <MobileScreen>
       <header className="px-5 pb-4 pt-10">
@@ -25,7 +46,12 @@ export default function Lists() {
         </p>
       </header>
       <main className="space-y-3 px-5">
-        {myLists.length === 0 ? (
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-20 rounded-xl2 bg-paper/60" />
+            <div className="h-20 rounded-xl2 bg-paper/60" />
+          </div>
+        ) : myLists.length === 0 ? (
           <div className="rounded-xl2 border border-dashed border-line bg-paper/60 px-6 py-12 text-center">
             <SparklesIcon className="mx-auto h-6 w-6 text-accent" aria-hidden="true" />
             <h2 className="mt-3 font-display text-lg font-semibold text-ink">No lists yet</h2>
@@ -52,7 +78,7 @@ export default function Lists() {
             </motion.div>
           ))
         )}
-        {myLists.length > 0 && (
+        {!loading && myLists.length > 0 && (
           <Link
             href="/create"
             className="flex items-center justify-center gap-2 rounded-xl2 border border-dashed border-line py-4 text-sm font-semibold text-muted transition active:scale-[0.99]"

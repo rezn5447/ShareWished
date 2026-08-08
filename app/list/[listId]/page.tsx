@@ -1,24 +1,48 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { EyeOffIcon, PlusIcon, Share2Icon } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
 import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 import { ItemCard } from '@/components/ItemCard'
 import { AddItemSheet } from '@/components/AddItemSheet'
 import { ShareSheet } from '@/components/ShareSheet'
-import { useWishlists } from '@/contexts/WishlistContext'
+import { useWishlistApi } from '@/lib/wishlist-api'
 import { getCover } from '@/data/covers'
 import { daysUntil, formatEventDate, formatPrice } from '@/utils/format'
+import { Wishlist } from '@/types/wishlist'
 
 export default function ListDetail() {
   const { listId } = useParams<{ listId: string }>()
-  const { getOwnerList, addItem, removeItem } = useWishlists()
+  const { user } = useUser()
+  const api = useWishlistApi()
   const [addOpen, setAddOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
-  const list = getOwnerList(listId)
+  const [list, setList] = useState<Wishlist | null | undefined>(undefined)
+
+  const refresh = useCallback(() => {
+    if (!user) return
+    api.fetchOwnerList(listId, user.id).then(setList)
+  }, [api, listId, user])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  if (list === undefined) {
+    return (
+      <MobileScreen>
+        <TopBar title="List" backTo="/lists" />
+        <div className="animate-pulse space-y-3 px-5 pt-4">
+          <div className="h-40 rounded-xl2 bg-paper/60" />
+          <div className="h-20 rounded-xl2 bg-paper/60" />
+        </div>
+      </MobileScreen>
+    )
+  }
   if (!list) {
     return (
       <MobileScreen>
@@ -111,7 +135,7 @@ export default function ListDetail() {
                 key={item.id}
                 item={item}
                 mode="owner"
-                onRemove={() => removeItem(list.id, item.id)}
+                onRemove={() => api.removeItem(item.id).then(refresh)}
               />
             ))}
           </AnimatePresence>
@@ -131,7 +155,7 @@ export default function ListDetail() {
       <AddItemSheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onAdd={(input) => addItem(list.id, input)}
+        onAdd={(input) => api.addItem(list.id, input).then(refresh)}
       />
       <ShareSheet
         open={shareOpen}
