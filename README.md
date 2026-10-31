@@ -77,6 +77,12 @@ npm run build
 npm start
 ```
 
+To check the code with ESLint:
+
+```bash
+npm run lint
+```
+
 ## How it fits together
 
 | Route | Who | What |

@@ -65,7 +65,7 @@ export default function Profile() {
             Surprise mode
           </h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-sage/80">
-            Always on. Purchases are recorded for your visitors only — there's no screen anywhere in
+            Always on. Purchases are recorded for your visitors only — there&apos;s no screen anywhere in
             this app that can show them to you.
           </p>
         </section>

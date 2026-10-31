@@ -70,7 +70,7 @@ export function ItemCard({ item, mode, onRemove, onClaim, onUndo, claimedByMe }:
             )}
           </div>
           {item.note && (
-            <p className="mt-1.5 text-xs leading-relaxed text-muted">"{item.note}"</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted">&quot;{item.note}&quot;</p>
           )}
         </div>
       </div>

@@ -14,20 +14,21 @@ export default function Lists() {
   const { user } = useUser()
   const api = useWishlistApi()
   const [myLists, setMyLists] = useState<Wishlist[]>([])
-  const [loading, setLoading] = useState(true)
+  // Id of the user whose lists have finished loading; loading until it matches.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  const loading = !user || loadedFor !== user.id
   const firstName = user?.firstName ?? 'there'
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    setLoading(true)
     api
       .fetchMyLists(user.id)
       .then((lists) => {
         if (!cancelled) setMyLists(lists)
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoadedFor(user.id)
       })
     return () => {
       cancelled = true
@@ -90,7 +91,7 @@ export default function Lists() {
         <div className="mt-6 rounded-xl2 bg-ink p-5 text-cream">
           <h2 className="font-display text-base font-semibold">Your lists stay a surprise</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-cream/70">
-            We never show you what's been bought. Visitors see the claimed items — you just see your
+            We never show you what&apos;s been bought. Visitors see the claimed items — you just see your
             list, exactly as you wrote it.
           </p>
         </div>

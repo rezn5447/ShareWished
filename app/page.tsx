@@ -28,7 +28,7 @@ export default function SignIn() {
             actually want.
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Make a wishlist, share the link, and let everyone else quietly sort out who's buying
+            Make a wishlist, share the link, and let everyone else quietly sort out who&apos;s buying
             what.
           </p>
         </motion.div>

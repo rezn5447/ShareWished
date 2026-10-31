@@ -53,7 +53,7 @@ export default function SharedList() {
     return (
       <MobileScreen padBottom={false}>
         <div className="px-6 py-24 text-center">
-          <h1 className="font-display text-xl font-semibold text-ink">This link isn't working</h1>
+          <h1 className="font-display text-xl font-semibold text-ink">This link isn&apos;t working</h1>
           <p className="mt-2 text-sm text-muted">
             The list may have been deleted, or the link was mistyped.
           </p>
@@ -107,7 +107,7 @@ export default function SharedList() {
             {cover.emoji}
           </span>
           <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight text-ink">
-            {firstName}'s {list.title}
+            {firstName}&apos;s {list.title}
           </h1>
           <p className="mt-1 text-xs font-medium text-ink/60">
             {list.occasion}
@@ -116,14 +116,14 @@ export default function SharedList() {
           </p>
           {list.note && (
             <p className="mt-3 rounded-2xl bg-paper/70 p-3 text-sm leading-relaxed text-ink/80">
-              "{list.note}"
+              &quot;{list.note}&quot;
             </p>
           )}
         </header>
         <div className="mx-5 -mt-3 flex items-start gap-2 rounded-2xl border border-line bg-paper px-3 py-3 shadow-card">
           <EyeOffIcon className="mt-0.5 h-4 w-4 shrink-0 text-sage" aria-hidden="true" />
           <p className="text-[12px] leading-relaxed text-muted">
-            Anything marked bought is hidden from {firstName} — but visible here so two people don't
+            Anything marked bought is hidden from {firstName} — but visible here so two people don&apos;t
             get the same gift.
           </p>
         </div>
@@ -149,10 +149,10 @@ export default function SharedList() {
             <div className="rounded-xl2 border border-dashed border-line bg-paper/60 px-6 py-12 text-center">
               <GiftIcon className="mx-auto h-6 w-6 text-sage" aria-hidden="true" />
               <h2 className="mt-3 font-display text-base font-semibold text-ink">
-                Everything's covered
+                Everything&apos;s covered
               </h2>
               <p className="mx-auto mt-1 max-w-[16rem] text-sm leading-relaxed text-muted">
-                Every item on this list has been claimed by someone. Switch to "All" to see them.
+                Every item on this list has been claimed by someone. Switch to &quot;All&quot; to see them.
               </p>
             </div>
           ) : (

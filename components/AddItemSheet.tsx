@@ -72,7 +72,7 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
       {status !== 'ready' ? (
         <form onSubmit={handleFetch} className="space-y-4">
           <p className="text-sm leading-relaxed text-muted">
-            Paste a product link from Amazon, Target, Etsy — anywhere you shop. We'll pull in the
+            Paste a product link from Amazon, Target, Etsy — anywhere you shop. We&apos;ll pull in the
             details.
           </p>
           <div>

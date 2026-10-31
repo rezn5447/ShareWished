@@ -1,5 +1,5 @@
 'use client'
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useSyncExternalStore } from 'react'
 
 interface WishlistContextValue {
   /**
@@ -21,52 +21,81 @@ interface WishlistContextValue {
 const WishlistContext = createContext<WishlistContextValue | null>(null)
 const STORAGE_KEY = 'wishlisted:gifter-name'
 const CLAIMS_KEY = 'wishlisted:claims'
+const NO_CLAIMS: Record<string, string> = {}
 
-function readClaims(): Record<string, string> {
-  try {
-    return JSON.parse(window.localStorage.getItem(CLAIMS_KEY) ?? '{}')
-  } catch {
-    return {}
+// Minimal localStorage-backed store for useSyncExternalStore. Falls back to
+// memory when storage is unavailable (private mode), so values still last
+// for the session.
+const memory = new Map<string, string>()
+const listeners = new Set<() => void>()
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  // Keeps other tabs in sync, e.g. a claim made in a second tab.
+  window.addEventListener('storage', listener)
+  return () => {
+    listeners.delete(listener)
+    window.removeEventListener('storage', listener)
   }
 }
 
-function writeClaims(claims: Record<string, string>) {
+function read(key: string): string | null {
   try {
-    window.localStorage.setItem(CLAIMS_KEY, JSON.stringify(claims))
+    return window.localStorage.getItem(key)
   } catch {
-    /* storage may be unavailable (private mode) — claims just won't survive a refresh */
+    return memory.get(key) ?? null
   }
+}
+
+function write(key: string, value: string) {
+  memory.set(key, value)
+  try {
+    window.localStorage.setItem(key, value)
+  } catch {
+    /* storage unavailable — the in-memory copy is used instead */
+  }
+  listeners.forEach((listener) => listener())
+}
+
+// useSyncExternalStore needs a stable snapshot, so cache the parsed claims
+// against the raw string they came from.
+let claimsCache: { raw: string | null; value: Record<string, string> } = {
+  raw: null,
+  value: NO_CLAIMS,
+}
+
+function readClaims(): Record<string, string> {
+  const raw = read(CLAIMS_KEY)
+  if (raw !== claimsCache.raw) {
+    let value = NO_CLAIMS
+    try {
+      value = raw ? JSON.parse(raw) : NO_CLAIMS
+    } catch {
+      /* corrupted entry — treat as no claims */
+    }
+    claimsCache = { raw, value }
+  }
+  return claimsCache.value
 }
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [gifterName, setGifterNameState] = useState('')
-  const [claimTokens, setClaimTokens] = useState<Record<string, string>>({})
+  const gifterName = useSyncExternalStore(
+    subscribe,
+    () => read(STORAGE_KEY) ?? '',
+    () => '',
+  )
+  const claimTokens = useSyncExternalStore(subscribe, readClaims, () => NO_CLAIMS)
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (stored) setGifterNameState(stored)
-    setClaimTokens(readClaims())
-  }, [])
-
-  const setGifterName = (name: string) => {
-    setGifterNameState(name)
-    window.localStorage.setItem(STORAGE_KEY, name)
-  }
+  const setGifterName = useCallback((name: string) => write(STORAGE_KEY, name), [])
 
   const rememberClaim = useCallback((itemId: string, token: string) => {
-    setClaimTokens((current) => {
-      const next = { ...current, [itemId]: token }
-      writeClaims(next)
-      return next
-    })
+    write(CLAIMS_KEY, JSON.stringify({ ...readClaims(), [itemId]: token }))
   }, [])
 
   const forgetClaim = useCallback((itemId: string) => {
-    setClaimTokens((current) => {
-      const { [itemId]: _removed, ...next } = current
-      writeClaims(next)
-      return next
-    })
+    const next = { ...readClaims() }
+    delete next[itemId]
+    write(CLAIMS_KEY, JSON.stringify(next))
   }, [])
 
   return (
