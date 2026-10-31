@@ -1,77 +1,73 @@
 import { LinkPreview } from '@/types/wishlist'
 import { isValidUrl, retailerFromUrl } from './format'
-const CATALOG: Array<{ keywords: string[]; preview: Omit<LinkPreview, 'retailer'> }> = [
-  {
-    keywords: ['headphone', 'audio', 'sony', 'bose', 'anc'],
-    preview: {
-      title: 'Studio Wireless Noise-Cancelling Headphones',
-      price: 279,
-      image:
-        'https://cdn.magicpatterns.com/patterns/generated-images/0a8e3950-8dcf-40d1-afb9-7c4c5dc37b8c.jpg',
-    },
-  },
-  {
-    keywords: ['mug', 'ceramic', 'kitchen', 'cup', 'pottery'],
-    preview: {
-      title: 'Speckled Stoneware Mug Set (2)',
-      price: 48,
-      image:
-        'https://cdn.magicpatterns.com/patterns/generated-images/5d7c83a8-4519-4326-8c48-b4293e137eb5.jpg',
-    },
-  },
-  {
-    keywords: ['shoe', 'sneaker', 'running', 'trainer'],
-    preview: {
-      title: 'Everyday Runner — Sage / Bone',
-      price: 132,
-      image:
-        'https://cdn.magicpatterns.com/patterns/generated-images/4f3c0583-cccd-47cd-9a06-4ea9081f4d10.jpg',
-    },
-  },
-  {
-    keywords: ['book', 'cookbook', 'recipe', 'read'],
-    preview: {
-      title: 'Slow Sundays: A Cookbook for Long Mornings',
-      price: 35,
-      image:
-        'https://cdn.magicpatterns.com/patterns/generated-images/2e6645e0-2b19-4e05-a062-cd271270b0b5.jpg',
-    },
-  },
-  {
-    keywords: ['camera', 'polaroid', 'instant', 'film', 'photo'],
-    preview: {
-      title: 'Instant Film Camera — Silver',
-      price: 119,
-      image:
-        'https://cdn.magicpatterns.com/patterns/generated-images/50074596-87a7-4b48-a326-b1489ca462ec.jpg',
-    },
-  },
-]
-const FALLBACK_IMAGE =
-  'https://cdn.magicpatterns.com/patterns/generated-images/5d7c83a8-4519-4326-8c48-b4293e137eb5.jpg'
+
+/** Shown when neither the page nor the link gives us a product photo. */
+export const PLACEHOLDER_IMAGE = '/item-placeholder.svg'
+
 /**
- * Simulates fetching product metadata from a pasted retailer link.
+ * Best guess at a product name from the link alone — no network. Many shops
+ * put a readable slug in the path, e.g. amazon.com/crocs-Unisex-Classic/dp/…
+ * or etsy.com/listing/123/handmade-mug. Query strings (tracking junk) are
+ * ignored. Returns '' when nothing looks like a name.
  */
-export function fetchLinkPreview(url: string): Promise<LinkPreview> {
-  return new Promise((resolve, reject) => {
-    window.setTimeout(() => {
-      if (!isValidUrl(url)) {
-        reject(new Error("That doesn't look like a product link. Paste the full web address."))
-        return
+export function titleFromUrl(url: string): string {
+  let pathname: string
+  try {
+    pathname = new URL(url).pathname
+  } catch {
+    return ''
+  }
+  const segments = pathname
+    .split('/')
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment)
+      } catch {
+        return segment
       }
-      const haystack = url.toLowerCase()
-      const match = CATALOG.find((entry) => entry.keywords.some((k) => haystack.includes(k)))
-      const retailer = retailerFromUrl(url)
-      if (match) {
-        resolve({ ...match.preview, retailer })
-        return
-      }
-      resolve({
-        title: `Item from ${retailer}`,
-        price: 0,
-        image: FALLBACK_IMAGE,
-        retailer,
-      })
-    }, 1100)
-  })
+    })
+    .map((segment) => segment.replace(/\.(html?|php|aspx?)$/i, ''))
+
+  // Amazon: the slug sits right before /dp/<ASIN>.
+  const dpIndex = segments.findIndex((segment) => segment === 'dp')
+  const candidates =
+    dpIndex > 0
+      ? [segments[dpIndex - 1]]
+      : segments.filter((segment) => /[a-z]{2,}[-_+][a-z]{2,}/i.test(segment))
+
+  // Prefer the segment with the most words; IDs and short codes lose out.
+  const best = candidates
+    .map((segment) => segment.split(/[-_+\s]+/).filter((word) => /[a-z]/i.test(word)))
+    .sort((a, b) => b.length - a.length)[0]
+  if (!best || best.length < 2) return ''
+  return best.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
+/** Fallback preview built only from the link. */
+export function previewFromUrl(url: string): LinkPreview {
+  return {
+    title: titleFromUrl(url),
+    price: 0,
+    image: PLACEHOLDER_IMAGE,
+    retailer: retailerFromUrl(url),
+  }
+}
+
+/**
+ * Pulls product details for a pasted link. Asks our server to read the page
+ * (see app/api/link-preview); if that fails or the shop blocks it, falls back
+ * to whatever the link itself tells us. Never invents a product.
+ */
+export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
+  const trimmed = url.trim()
+  if (!isValidUrl(trimmed)) {
+    throw new Error("That doesn't look like a product link. Paste the full web address.")
+  }
+  try {
+    const response = await fetch(`/api/link-preview?url=${encodeURIComponent(trimmed)}`)
+    if (response.ok) return (await response.json()) as LinkPreview
+  } catch {
+    /* network error — use the link-only guess below */
+  }
+  return previewFromUrl(trimmed)
 }

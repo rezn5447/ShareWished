@@ -7,7 +7,7 @@ export function formatPrice(value: number): string {
 }
 export function retailerFromUrl(url: string): string {
   try {
-    const host = new URL(url).hostname.replace(/^www\./, '')
+    const host = new URL(url).hostname.replace(/^(www|m|smile|shop)\./, '')
     const base = host.split('.')[0]
     return base.charAt(0).toUpperCase() + base.slice(1)
   } catch {

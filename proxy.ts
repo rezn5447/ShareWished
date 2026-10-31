@@ -5,6 +5,8 @@ const isProtectedRoute = createRouteMatcher([
   '/create(.*)',
   '/list(.*)',
   '/profile(.*)',
+  // Fetches arbitrary URLs server-side, so keep it to signed-in owners.
+  '/api/link-preview(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

@@ -132,6 +132,12 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
               <p className="mt-0.5 truncate text-sm text-ink">{url}</p>
             </div>
           </div>
+          {(!preview?.title || !preview.price) && (
+            <p className="rounded-2xl bg-accent-soft px-3 py-2.5 text-xs font-medium leading-relaxed text-accent">
+              {preview?.retailer} didn&apos;t share all the details — fill in anything that&apos;s
+              missing.
+            </p>
+          )}
           <div>
             <label htmlFor="item-title" className="mb-1.5 block text-xs font-semibold text-ink">
               Item name

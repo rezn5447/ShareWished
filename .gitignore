@@ -27,3 +27,6 @@ next-env.d.ts
 
 # vercel
 .vercel
+
+# generated seed data (contains Clerk test user ids)
+supabase/seed.generated.sql

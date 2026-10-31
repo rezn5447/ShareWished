@@ -11,10 +11,14 @@ interface ShareSheetProps {
 }
 export function ShareSheet({ open, onClose, shareId, listTitle }: ShareSheetProps) {
   const [copied, setCopied] = useState(false)
-  const url = `wishlisted.app/w/${shareId}`
+  // Only rendered while open (client-side), so window is available. Set
+  // NEXT_PUBLIC_SITE_URL to pin links to a custom domain.
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+  const fullUrl = `${origin.replace(/\/$/, '')}/w/${shareId}`
+  const url = fullUrl.replace(/^https?:\/\//, '')
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(`https://${url}`)
+      await navigator.clipboard.writeText(fullUrl)
     } catch {
       /* clipboard may be unavailable — the link is still visible above */
     }
@@ -47,7 +51,7 @@ export function ShareSheet({ open, onClose, shareId, listTitle }: ShareSheetProp
           </button>
         </div>
         <a
-          href={`sms:&body=${encodeURIComponent(`Here's my wishlist: https://${url}`)}`}
+          href={`sms:&body=${encodeURIComponent(`Here's my wishlist: ${fullUrl}`)}`}
           className="flex items-center justify-center gap-2 rounded-full border border-line bg-cream py-3.5 text-sm font-semibold text-ink transition active:scale-[0.99]"
         >
           <MessageCircleIcon className="h-4 w-4" aria-hidden="true" />
