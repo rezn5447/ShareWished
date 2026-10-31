@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckIcon, EyeOffIcon, GiftIcon } from 'lucide-react'
+import { AlertCircleIcon, CheckIcon, EyeOffIcon, GiftIcon } from 'lucide-react'
 import { MobileScreen } from '@/components/MobileScreen'
 import { ItemCard } from '@/components/ItemCard'
 import { ClaimSheet } from '@/components/ClaimSheet'
@@ -15,11 +15,11 @@ import { Wishlist } from '@/types/wishlist'
 type Filter = 'available' | 'all'
 export default function SharedList() {
   const { shareId } = useParams<{ shareId: string }>()
-  const { gifterName, setGifterName } = useWishlists()
+  const { gifterName, setGifterName, claimTokens, rememberClaim, forgetClaim } = useWishlists()
   const api = useWishlistApi()
   const [filter, setFilter] = useState<Filter>('available')
   const [claimingId, setClaimingId] = useState<string | null>(null)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<{ message: string; ok: boolean } | null>(null)
   const [list, setList] = useState<Wishlist | null | undefined>(undefined)
 
   const refresh = useCallback(() => {
@@ -68,14 +68,33 @@ export default function SharedList() {
   const days = daysUntil(list.eventDate)
   const claimedCount = list.items.filter((item) => item.purchase).length
   const firstName = list.ownerName.split(' ')[0]
+  const showToast = (message: string, ok: boolean) => {
+    setToast({ message, ok })
+    window.setTimeout(() => setToast(null), 3200)
+  }
   const confirmClaim = async (name: string) => {
     if (!claiming) return
     setGifterName(name)
-    await api.markPurchased(claiming.id, name)
-    setToast(`Locked in. ${firstName} won't see a thing.`)
+    try {
+      const token = await api.markPurchased(claiming.id, name)
+      rememberClaim(claiming.id, token)
+      showToast(`Locked in. ${firstName} won't see a thing.`, true)
+    } catch (error) {
+      showToast((error as Error).message, false)
+    }
     setClaimingId(null)
     refresh()
-    window.setTimeout(() => setToast(''), 3200)
+  }
+  const undoClaim = async (itemId: string) => {
+    const token = claimTokens[itemId]
+    if (!token) return
+    try {
+      await api.undoPurchase(itemId, token)
+      forgetClaim(itemId)
+    } catch (error) {
+      showToast((error as Error).message, false)
+    }
+    refresh()
   }
   return (
     <MobileScreen padBottom={false}>
@@ -143,11 +162,9 @@ export default function SharedList() {
                   key={item.id}
                   item={item}
                   mode="gifter"
-                  claimedByMe={Boolean(
-                    item.purchase && gifterName && item.purchase.by === gifterName,
-                  )}
+                  claimedByMe={Boolean(item.purchase && claimTokens[item.id])}
                   onClaim={(claimed) => setClaimingId(claimed.id)}
-                  onUndo={() => api.undoPurchase(item.id).then(refresh)}
+                  onUndo={() => undoClaim(item.id)}
                 />
               ))}
             </AnimatePresence>
@@ -169,8 +186,12 @@ export default function SharedList() {
             role="status"
             className="fixed bottom-6 left-1/2 z-50 flex w-[min(22rem,90vw)] -translate-x-1/2 items-center gap-2 rounded-full bg-ink px-4 py-3 text-xs font-semibold text-cream shadow-lg"
           >
-            <CheckIcon className="h-4 w-4 text-sage" aria-hidden="true" />
-            {toast}
+            {toast.ok ? (
+              <CheckIcon className="h-4 w-4 text-sage" aria-hidden="true" />
+            ) : (
+              <AlertCircleIcon className="h-4 w-4 text-accent" aria-hidden="true" />
+            )}
+            {toast.message}
           </motion.div>
         )}
       </AnimatePresence>

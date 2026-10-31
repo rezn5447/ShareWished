@@ -27,14 +27,30 @@ interface ListRow {
   share_id: string
   created_at: string
 }
+/** Purchase as exposed by `get_shared_list` — never includes the claim token. */
 interface PurchaseRow {
-  id: string
-  item_id: string
   gifter_name: string
   purchased_at: string
 }
+interface SharedListPayload {
+  list: ListRow
+  is_owner: boolean
+  items: Array<ItemRow & { purchase: PurchaseRow | null }>
+}
 
-function mapItem(row: ItemRow, purchase?: PurchaseRow): WishlistItem {
+const CLAIM_ERRORS: Record<string, string> = {
+  already_claimed: 'Someone just claimed this one. Pick another gift?',
+  own_list: "This is your own list — gifts are claimed by your visitors.",
+  item_not_found: 'That item was removed from the list.',
+  invalid_name: 'Add a name so others know this is covered.',
+}
+
+function claimError(error: { message: string }): Error {
+  const key = Object.keys(CLAIM_ERRORS).find((code) => error.message.includes(code))
+  return new Error(key ? CLAIM_ERRORS[key] : "Couldn't save that. Try again in a moment.")
+}
+
+function mapItem(row: ItemRow, purchase?: PurchaseRow | null): WishlistItem {
   return {
     id: row.id,
     title: row.title,
@@ -71,7 +87,10 @@ function makeShareId(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
     .slice(0, 24)
-  return `${slug || 'list'}-${Math.random().toString(36).slice(2, 6)}`
+  // Share links are the only way into a list, so the suffix must not be guessable.
+  const bytes = crypto.getRandomValues(new Uint8Array(8))
+  const suffix = Array.from(bytes, (b) => (b % 36).toString(36)).join('')
+  return `${slug || 'list'}-${suffix}`
 }
 
 export interface NewListInput {
@@ -152,39 +171,17 @@ export function useWishlistApi() {
 
   const fetchSharedList = useCallback(
     async (shareId: string): Promise<Wishlist | null> => {
-      const { data: list, error } = await supabase
-        .from('wishlists')
-        .select('*')
-        .eq('share_id', shareId)
-        .maybeSingle()
+      // Goes through a security-definer function: purchases are stripped
+      // server-side when the caller owns the list, which is where surprise
+      // mode is actually enforced (see supabase/migrations).
+      const { data, error } = await supabase.rpc('get_shared_list', { p_share_id: shareId })
       if (error) throw error
-      if (!list) return null
-      const { data: items, error: itemsError } = await supabase
-        .from('wishlist_items')
-        .select('*')
-        .eq('wishlist_id', list.id)
-        .order('added_at', { ascending: false })
-      if (itemsError) throw itemsError
-      const itemIds = (items ?? []).map((i) => i.id)
-      let purchases: PurchaseRow[] = []
-      if (itemIds.length > 0) {
-        // Returns nothing for items the requester doesn't have visibility
-        // into — this is where "surprise mode" is actually enforced, at
-        // the database level, not just in this file.
-        const { data: purchaseRows, error: purchasesError } = await supabase
-          .from('purchases')
-          .select('*')
-          .in('item_id', itemIds)
-        if (purchasesError) throw purchasesError
-        purchases = purchaseRows ?? []
-      }
-      const mappedItems = (items ?? []).map((i) =>
-        mapItem(
-          i,
-          purchases.find((p) => p.item_id === i.id),
-        ),
+      if (!data) return null
+      const payload = data as unknown as SharedListPayload
+      return mapList(
+        payload.list,
+        payload.items.map((i) => mapItem(i, i.purchase)),
       )
-      return mapList(list, mappedItems)
     },
     [supabase],
   )
@@ -249,20 +246,26 @@ export function useWishlistApi() {
     [supabase],
   )
 
+  /** Returns the claim token the gifter needs to undo later. */
   const markPurchased = useCallback(
-    async (itemId: string, gifterName: string) => {
-      const { error } = await supabase
-        .from('purchases')
-        .insert({ item_id: itemId, gifter_name: gifterName })
-      if (error) throw error
+    async (itemId: string, gifterName: string): Promise<string> => {
+      const { data, error } = await supabase.rpc('claim_item', {
+        p_item_id: itemId,
+        p_gifter_name: gifterName,
+      })
+      if (error) throw claimError(error)
+      return data
     },
     [supabase],
   )
 
   const undoPurchase = useCallback(
-    async (itemId: string) => {
-      const { error } = await supabase.from('purchases').delete().eq('item_id', itemId)
-      if (error) throw error
+    async (itemId: string, claimToken: string) => {
+      const { error } = await supabase.rpc('unclaim_item', {
+        p_item_id: itemId,
+        p_claim_token: claimToken,
+      })
+      if (error) throw claimError(error)
     },
     [supabase],
   )

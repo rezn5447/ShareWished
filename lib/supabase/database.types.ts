@@ -14,18 +14,21 @@ export type Database = {
     Tables: {
       purchases: {
         Row: {
+          claim_token: string
           gifter_name: string
           id: string
           item_id: string
           purchased_at: string
         }
         Insert: {
+          claim_token?: string
           gifter_name: string
           id?: string
           item_id: string
           purchased_at?: string
         }
         Update: {
+          claim_token?: string
           gifter_name?: string
           id?: string
           item_id?: string
@@ -132,7 +135,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_item: {
+        Args: { p_item_id: string; p_gifter_name: string }
+        Returns: string
+      }
+      get_shared_list: {
+        Args: { p_share_id: string }
+        Returns: Json
+      }
+      unclaim_item: {
+        Args: { p_item_id: string; p_claim_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
