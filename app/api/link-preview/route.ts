@@ -1,9 +1,10 @@
 import { lookup } from 'node:dns/promises'
 import { BlockList, isIP } from 'node:net'
 import { NextRequest, NextResponse } from 'next/server'
-import { parseProductHtml } from '@/lib/link-preview/parse-html'
-import { isValidUrl, retailerFromUrl } from '@/utils/format'
-import { PLACEHOLDER_IMAGE, titleFromUrl } from '@/utils/linkPreview'
+import { parseProductHtml, type PageDetails } from '@/lib/link-preview/parse-html'
+import { parseShopifyProduct, shopifyProductJsonUrl } from '@/lib/link-preview/shopify'
+import { isValidUrl } from '@/utils/format'
+import { previewFromUrl } from '@/utils/linkPreview'
 import type { LinkPreview } from '@/types/wishlist'
 
 export const runtime = 'nodejs'
@@ -26,50 +27,81 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
   }
 
-  const preview: LinkPreview = {
-    title: titleFromUrl(url),
-    price: 0,
-    image: PLACEHOLDER_IMAGE,
-    retailer: retailerFromUrl(url),
-  }
-
+  let page: FetchedPage | null = null
   try {
-    const page = await fetchPage(url)
-    if (page) {
-      const details = parseProductHtml(page.html, page.url)
-      if (details.title) preview.title = details.title
-      if (details.image) preview.image = details.image
-      if (details.price) preview.price = details.price
-    }
+    page = await fetchPublic(url, 'text/html,application/xhtml+xml', /html/)
   } catch {
-    /* blocked, timed out, or not HTML — keep the link-only preview */
+    /* blocked or timed out — fall back to the link-only preview */
+  }
+  // Short links (a.co/…) only reveal the shop and product slug after redirecting.
+  const resolvedUrl = page?.url ?? url
+  const found: PageDetails = page?.body
+    ? parseProductHtml(page.body, page.url)
+    : { title: '', image: '', price: 0 }
+
+  if (!found.title || !found.image || !found.price) {
+    const shopify = await fetchShopifyProduct(resolvedUrl).catch(() => null)
+    if (shopify) {
+      found.title ||= shopify.title
+      found.image ||= shopify.image
+      found.price ||= shopify.price
+    }
   }
 
+  const guess = previewFromUrl(resolvedUrl)
+  const preview: LinkPreview = {
+    title: found.title || guess.title,
+    image: found.image || guess.image,
+    price: found.price || guess.price,
+    retailer: guess.retailer,
+    source: found.title || found.image ? 'page' : 'link',
+  }
   return NextResponse.json(preview)
 }
 
-/** Fetches a public web page, following redirects only to other public hosts. */
-async function fetchPage(startUrl: string): Promise<{ html: string; url: string } | null> {
+async function fetchShopifyProduct(pageUrl: string): Promise<PageDetails | null> {
+  const productUrl = shopifyProductJsonUrl(pageUrl)
+  if (!productUrl) return null
+  const json = 'application/json'
+  const [product, shop] = await Promise.all([
+    fetchPublic(productUrl, json, /json|javascript/),
+    fetchPublic(new URL('/meta.json', productUrl).toString(), json, /json/).catch(() => null),
+  ])
+  if (!product.body) return null
+  return parseShopifyProduct(product.body, shop?.body ?? null, pageUrl)
+}
+
+/** `body` is null when the server refused or sent the wrong content type. */
+interface FetchedPage {
+  url: string
+  body: string | null
+}
+
+/** Fetches a public URL, following redirects only to other public hosts. */
+async function fetchPublic(startUrl: string, accept: string, contentType: RegExp): Promise<FetchedPage> {
   let url = startUrl
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     await assertPublicHost(url)
     const response = await fetch(url, {
       redirect: 'manual',
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
+      headers: { 'User-Agent': USER_AGENT, Accept: accept },
     })
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location')
-      if (!location) return null
-      url = new URL(location, url).toString()
-      if (!isValidUrl(url)) return null
+      if (!location) return { url, body: null }
+      const next = new URL(location, url).toString()
+      if (!isValidUrl(next)) return { url, body: null }
+      url = next
       continue
     }
-    if (!response.ok) return null
-    if (!response.headers.get('content-type')?.includes('html')) return null
-    return { html: await readCapped(response), url }
+    if (!response.ok || !contentType.test(response.headers.get('content-type') ?? '')) {
+      await response.body?.cancel().catch(() => {})
+      return { url, body: null }
+    }
+    return { url, body: await readCapped(response) }
   }
-  return null
+  return { url, body: null }
 }
 
 /** Reads at most MAX_BYTES — product metadata lives near the top of the page. */

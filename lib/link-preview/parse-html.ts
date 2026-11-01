@@ -112,7 +112,7 @@ function offerPrice(offers: unknown): { price: number; currency: string } {
   }
 }
 
-function absoluteUrl(src: string, base: string): string {
+export function absoluteUrl(src: string, base: string): string {
   if (!src) return ''
   try {
     const url = new URL(src, base)

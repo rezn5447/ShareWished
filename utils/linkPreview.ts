@@ -50,24 +50,57 @@ export function previewFromUrl(url: string): LinkPreview {
     price: 0,
     image: PLACEHOLDER_IMAGE,
     retailer: retailerFromUrl(url),
+    source: 'link',
   }
 }
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 /**
- * Pulls product details for a pasted link. Asks our server to read the page
- * (see app/api/link-preview); if that fails or the shop blocks it, falls back
- * to whatever the link itself tells us. Never invents a product.
+ * Splits what a shop app's Share button copies into the link and the product
+ * name around it, e.g. "Amazon.com: Crocs Classic Clog https://a.co/d/xyz" or
+ * "Check out Stanley Quencher at Target https://target.com/p/…". The name is
+ * the useful part when the shop blocks us from reading its page.
  */
-export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
-  const trimmed = url.trim()
-  if (!isValidUrl(trimmed)) {
+export function parseSharedText(text: string): { url: string; title: string } {
+  const match = text.match(/https?:\/\/[^\s<>"']+/i)
+  const url = match?.[0].replace(/[.,;:!?)\]]+$/, '') ?? ''
+  if (!match || !isValidUrl(url)) return { url: '', title: '' }
+
+  const shop = escapeRegExp(retailerFromUrl(url))
+  const title = text
+    .replace(match[0], ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^(check out|look at|i found|found)( this| these)?\b[:!,-]?\s*/i, '')
+    .replace(new RegExp(`^${shop}(\\.[a-z.]+)?\\s*:\\s*`, 'i'), '')
+    .replace(new RegExp(`\\s*(?:[|–—:-]|\\b(?:on|at|from|via))\\s*${shop}(\\.[a-z.]+)?$`, 'i'), '')
+    .replace(/^["“'‘]+|["”'’.,:!-]+$/g, '')
+    .trim()
+  // "Check out this item on Etsy" leaves just "item": not a name.
+  const generic = /^(this |these |the )?(item|product|listing|deal|find)s?$/i
+  return { url, title: title.length > 2 && /[a-z]/i.test(title) && !generic.test(title) ? title : '' }
+}
+
+/**
+ * Pulls product details for a pasted link (or shared text containing one).
+ * Asks our server to read the page (see app/api/link-preview); if that fails
+ * or the shop blocks it, falls back to the shared text, then the link itself.
+ * Never invents a product.
+ */
+export async function fetchLinkPreview(input: string): Promise<LinkPreview & { url: string }> {
+  const { url, title: sharedTitle } = parseSharedText(input.trim())
+  if (!url) {
     throw new Error("That doesn't look like a product link. Paste the full web address.")
   }
+  let preview = previewFromUrl(url)
   try {
-    const response = await fetch(`/api/link-preview?url=${encodeURIComponent(trimmed)}`)
-    if (response.ok) return (await response.json()) as LinkPreview
+    const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`)
+    if (response.ok) preview = (await response.json()) as LinkPreview
   } catch {
-    /* network error — use the link-only guess below */
+    /* network error — keep the link-only guess */
   }
-  return previewFromUrl(trimmed)
+  // The shop's own share text beats a guess from the URL slug.
+  if (preview.source === 'link' && sharedTitle) preview = { ...preview, title: sharedTitle }
+  return { ...preview, url }
 }

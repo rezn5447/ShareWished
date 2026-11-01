@@ -44,6 +44,8 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
     setError('')
     try {
       const result = await fetchLinkPreview(url)
+      // Drop any share text around the link; keep just the link itself.
+      setUrl(result.url)
       setPreview(result)
       setTitle(result.title)
       setPrice(result.price ? String(result.price) : '')
@@ -72,8 +74,8 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
       {status !== 'ready' ? (
         <form onSubmit={handleFetch} className="space-y-4">
           <p className="text-sm leading-relaxed text-muted">
-            Paste a product link from Amazon, Target, Etsy — anywhere you shop. We&apos;ll pull in the
-            details.
+            Paste a product link from Amazon, Target, Etsy — anywhere you shop. In a shop&apos;s app,
+            tap Share, copy, and paste the whole thing here.
           </p>
           <div>
             <label htmlFor="item-url" className="mb-1.5 block text-xs font-semibold text-ink">
@@ -83,8 +85,10 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
               <LinkIcon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
               <input
                 id="item-url"
-                type="url"
+                type="text"
                 inputMode="url"
+                autoCapitalize="off"
+                autoCorrect="off"
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder="https://www.amazon.com/..."
@@ -132,11 +136,18 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
               <p className="mt-0.5 truncate text-sm text-ink">{url}</p>
             </div>
           </div>
-          {(!preview?.title || !preview.price) && (
+          {preview?.source === 'link' ? (
             <p className="rounded-2xl bg-accent-soft px-3 py-2.5 text-xs font-medium leading-relaxed text-accent">
-              {preview?.retailer} didn&apos;t share all the details — fill in anything that&apos;s
-              missing.
+              {preview.retailer} doesn&apos;t let us read its pages, so add the name and price
+              yourself. The link still goes to the right product.
             </p>
+          ) : (
+            (!preview?.title || !preview.price) && (
+              <p className="rounded-2xl bg-accent-soft px-3 py-2.5 text-xs font-medium leading-relaxed text-accent">
+                {preview?.retailer} didn&apos;t share all the details — fill in anything that&apos;s
+                missing.
+              </p>
+            )
           )}
           <div>
             <label htmlFor="item-title" className="mb-1.5 block text-xs font-semibold text-ink">
@@ -146,6 +157,7 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
               id="item-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
+              autoFocus={!title}
               className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm text-ink focus:border-ink focus:outline-none"
               required
             />
@@ -161,6 +173,7 @@ export function AddItemSheet({ open, onClose, onAdd }: AddItemSheetProps) {
               step="1"
               value={price}
               onChange={(event) => setPrice(event.target.value)}
+              autoFocus={!!title && !price}
               placeholder="0"
               className="w-full rounded-2xl border border-line bg-cream px-3 py-3 text-sm text-ink focus:border-ink focus:outline-none"
             />

@@ -5,9 +5,18 @@ export function formatPrice(value: number): string {
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
   })
 }
+// Share buttons in shop apps hand out short links whose host isn't the shop's name.
+const SHORT_LINK_RETAILERS: Record<string, string> = {
+  'a.co': 'Amazon',
+  'amzn.to': 'Amazon',
+  'amzn.eu': 'Amazon',
+  'etsy.me': 'Etsy',
+  'walmrt.us': 'Walmart',
+}
 export function retailerFromUrl(url: string): string {
   try {
     const host = new URL(url).hostname.replace(/^(www|m|smile|shop)\./, '')
+    if (SHORT_LINK_RETAILERS[host]) return SHORT_LINK_RETAILERS[host]
     const base = host.split('.')[0]
     return base.charAt(0).toUpperCase() + base.slice(1)
   } catch {

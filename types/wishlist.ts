@@ -45,4 +45,6 @@ export interface LinkPreview {
   price: number
   image: string
   retailer: string
+  /** 'page' when the shop gave us details; 'link' when it's only a guess from the URL. */
+  source: 'page' | 'link'
 }
