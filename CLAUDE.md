@@ -15,7 +15,7 @@ Test sign-in: `maya+clerk_test@example.com` (also jordan, priya, theo, ben), cod
 
 - Clerk is the only identity provider. Supabase trusts Clerk session tokens via third-party auth; in Postgres the user id is `auth.jwt() ->> 'sub'` (a Clerk id string, not a uuid). Do not use `auth.uid()`.
 - `lib/supabase/client.ts` is a client-side hook that passes the Clerk token on every request. No token = `anon` role.
-- `lib/wishlist-api.ts` is the only module that talks to Supabase. Keep it that way.
+- `lib/wishlist-api.ts` is the only client-side module that talks to Supabase. Keep it that way. The one server-side exception is `lib/shared-list-preview.ts` (always anonymous, feeds share-link metadata and the OG image). It must never expose purchase data, because owners see link previews too.
 - `proxy.ts` is Next 16's replacement for `middleware.ts` — route protection lives there, not in a `middleware.ts`.
 
 ## Surprise mode — the invariant that must not break

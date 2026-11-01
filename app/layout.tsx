@@ -4,6 +4,8 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Providers } from './providers'
 
 export const metadata: Metadata = {
+  // Unset falls back to the Vercel deployment URL, which is fine for previews.
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
   title: 'Wishlisted',
   description: 'Ask for what you actually want.',
 }
