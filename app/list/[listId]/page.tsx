@@ -117,7 +117,7 @@ export default function ListDetail() {
           <div className="rounded-xl2 border border-dashed border-line bg-paper/60 px-6 py-12 text-center">
             <h4 className="font-display text-base font-semibold text-ink">Nothing here yet</h4>
             <p className="mx-auto mt-1 max-w-[16rem] text-sm leading-relaxed text-muted">
-              Paste a link from any shop and we&apos;ll pull in the photo and price.
+              Add the things you&apos;d love, with a link so friends know exactly what to get.
             </p>
             <button
               type="button"
