@@ -9,11 +9,15 @@ const isProtectedRoute = createRouteMatcher([
   '/api/link-preview(.*)',
 ])
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect()
-  }
-})
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (isProtectedRoute(req)) {
+      await auth.protect()
+    }
+  },
+  // In-app pages, not the Account Portal — accounts.<host> doesn't work on *.vercel.app.
+  { signInUrl: '/sign-in', signUpUrl: '/sign-up' },
+)
 
 export const config = {
   matcher: [
