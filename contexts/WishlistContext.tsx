@@ -19,6 +19,8 @@ interface WishlistContextValue {
 }
 
 const WishlistContext = createContext<WishlistContextValue | null>(null)
+// Keys keep the app's old name: renaming them would orphan gifters' saved
+// claim tokens, and they'd lose the ability to undo a claim.
 const STORAGE_KEY = 'wishlisted:gifter-name'
 const CLAIMS_KEY = 'wishlisted:claims'
 const NO_CLAIMS: Record<string, string> = {}

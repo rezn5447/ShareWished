@@ -6,7 +6,7 @@ import { Providers } from './providers'
 export const metadata: Metadata = {
   // Unset falls back to the Vercel deployment URL, which is fine for previews.
   metadataBase: process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
-  title: 'Wishlisted',
+  title: 'Gimme',
   description: 'Ask for what you actually want.',
 }
 

@@ -1,4 +1,4 @@
-# Wishlisted
+# Gimme
 
 Make a wishlist, share a link, and let friends claim gifts without you ever seeing what's been bought ("surprise mode").
 
@@ -30,7 +30,7 @@ cp .env.local.example .env.local
 | `CLERK_SECRET_KEY` | Clerk dashboard → your app → **API Keys** |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase dashboard → **Project Settings → API** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase dashboard → **Project Settings → API** (publishable / anon key) |
-| `NEXT_PUBLIC_SITE_URL` | Optional. Domain used in share links, e.g. `https://wishlisted.app`. Defaults to the domain the app is opened on. |
+| `NEXT_PUBLIC_SITE_URL` | Optional. Domain used in share links, e.g. `https://your-domain.com`. Defaults to the domain the app is opened on. |
 
 `.env.local` is gitignored. Never commit it.
 

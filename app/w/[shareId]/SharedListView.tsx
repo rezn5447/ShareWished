@@ -58,7 +58,7 @@ export function SharedListView() {
             The list may have been deleted, or the link was mistyped.
           </p>
           <Link href="/" className="mt-4 inline-block text-sm font-semibold text-accent underline">
-            Go to Wishlisted
+            Go to Gimme
           </Link>
         </div>
       </MobileScreen>
@@ -101,7 +101,7 @@ export function SharedListView() {
       <div className="pb-16">
         <header className={`${cover.bg} px-5 pb-6 pt-10`}>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-ink/50">
-            Wishlisted
+            Gimme
           </p>
           <span className="mt-4 block text-3xl" aria-hidden="true">
             {cover.emoji}
@@ -172,7 +172,7 @@ export function SharedListView() {
           <p className="pt-4 text-center text-xs text-muted">
             Want your own list?{' '}
             <Link href="/" className="font-semibold text-ink underline underline-offset-4">
-              Try Wishlisted
+              Try Gimme
             </Link>
           </p>
         </main>
