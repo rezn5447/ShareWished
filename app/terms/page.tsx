@@ -4,16 +4,16 @@ import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 
 export const metadata: Metadata = {
-  title: 'Terms · Wishlisted',
-  description: 'The ground rules for using Wishlisted.',
+  title: 'Terms · Gimme',
+  description: 'The ground rules for using Gimme.',
 }
 
 // Public on purpose, like /privacy: Google's sign-in screen links here.
 const sections = [
   {
-    heading: 'Using Wishlisted',
+    heading: 'Using Gimme',
     body: [
-      'Wishlisted lets you make wishlists, share them by link, and lets friends mark gifts as bought. It is free to use.',
+      'Gimme lets you make wishlists, share them by link, and lets friends mark gifts as bought. It is free to use.',
       'By creating an account or opening a shared list, you agree to these terms. If you don\'t agree, please don\'t use the app.',
     ],
   },
@@ -21,7 +21,7 @@ const sections = [
     heading: 'Your account and lists',
     body: [
       "You're responsible for what you put on your lists and who you send your links to. Anyone with a link can open that list.",
-      "Don't use Wishlisted for anything illegal, to harass people, or to post content you don't have the right to share.",
+      "Don't use Gimme for anything illegal, to harass people, or to post content you don't have the right to share.",
       'We may remove content or close accounts that break these rules.',
     ],
   },
@@ -35,7 +35,7 @@ const sections = [
   {
     heading: 'No guarantees',
     body: [
-      'Wishlisted is provided as is. We work to keep it running and your lists safe, but we can\'t promise it will always be available or error free, and we aren\'t liable for losses from using it.',
+      'Gimme is provided as is. We work to keep it running and your lists safe, but we can\'t promise it will always be available or error free, and we aren\'t liable for losses from using it.',
       'We may change or stop the service, or update these terms. If we make a big change, we\'ll update this page.',
     ],
   },
