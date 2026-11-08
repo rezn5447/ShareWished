@@ -20,7 +20,7 @@ export default function SignIn() {
           transition={{ duration: 0.5 }}
         >
           <span className="inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-widest text-accent">
-            Wishlisted
+            Gimme
           </span>
           <h1 className="mt-5 font-display text-[34px] font-semibold leading-[1.1] text-ink">
             Ask for what you

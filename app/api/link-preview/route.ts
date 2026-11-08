@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
 
 // Identify honestly. Shops that block bots will block this — that's fine,
 // the client falls back to reading the link itself.
-const USER_AGENT = 'WishlistedLinkPreview/1.0 (+link preview for a wishlist app)'
+const USER_AGENT = 'GimmeLinkPreview/1.0 (+link preview for a wishlist app)'
 const TIMEOUT_MS = 6000
 const MAX_BYTES = 1_500_000
 const MAX_REDIRECTS = 3

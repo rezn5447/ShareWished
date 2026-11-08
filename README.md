@@ -1,4 +1,4 @@
-# Wishlisted
+# Gimme
 
 Make a wishlist, share a link, and let friends claim gifts without you ever seeing what's been bought ("surprise mode").
 

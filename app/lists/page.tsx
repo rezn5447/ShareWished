@@ -38,7 +38,7 @@ export default function Lists() {
   return (
     <MobileScreen>
       <header className="px-5 pb-4 pt-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">Wishlisted</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-accent">Gimme</p>
         <h1 className="mt-2 font-display text-3xl font-semibold text-ink">Hi, {firstName}</h1>
         <p className="mt-1 text-sm text-muted">
           {myLists.length === 0

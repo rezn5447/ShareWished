@@ -3,7 +3,7 @@ import { fetchSharedListPreview } from '@/lib/shared-list-preview'
 import { getCover } from '@/data/covers'
 import { formatEventDate } from '@/utils/format'
 
-export const alt = 'A wishlist on Wishlisted'
+export const alt = 'A wishlist on Gimme'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -31,7 +31,7 @@ export default async function Image({ params }: { params: Promise<{ shareId: str
         }}
       >
         <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: 6, opacity: 0.5 }}>
-          WISHLISTED
+          GIMME
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 96 }}>{cover.emoji}</div>

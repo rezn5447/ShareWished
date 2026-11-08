@@ -1,4 +1,4 @@
-# Wishlisted
+# Gimme
 
 Wishlist app: owners make lists and share a link; friends claim gifts without the owner ever seeing what's claimed ("surprise mode"). Next.js 16 App Router, React 18, Tailwind 3, Clerk (auth), Supabase (Postgres + RLS). Setup and route map are in README.md.
 
@@ -32,7 +32,7 @@ An owner must never be able to learn which of their items are claimed or by whom
 
 - Migrations live in `supabase/migrations/` and are written to be re-runnable (`if not exists`, policies reset at the top of the security migration).
 - After a schema change: apply the migration, regenerate `lib/supabase/database.types.ts` (Supabase MCP `generate_typescript_types`), then run the security + performance advisors.
-- Supabase project: `wishlisted` (ref `kxicwfigzrtlmkkvkilu`). The live migration history doesn't match the file names in the repo (the security migration was applied via the SQL editor), so check live state before assuming `supabase db push` will do the right thing.
+- Supabase project: `wishlisted` (ref `kxicwfigzrtlmkkvkilu`; it kept the app's old name). The live migration history doesn't match the file names in the repo (the security migration was applied via the SQL editor), so check live state before assuming `supabase db push` will do the right thing.
 
 ## Link previews
 
