@@ -31,6 +31,7 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase dashboard → **Project Settings → API** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase dashboard → **Project Settings → API** (publishable / anon key) |
 | `NEXT_PUBLIC_SITE_URL` | Optional. Domain used in share links, e.g. `https://wishlisted.app`. Defaults to the domain the app is opened on. |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | Optional. Inbox behind **Help & feedback** on the profile page. Leave unset to hide that row. |
 
 `.env.local` is gitignored. Never commit it.
 
@@ -84,11 +85,22 @@ To check the code with ESLint:
 npm run lint
 ```
 
+## Tests
+
+End-to-end tests use [Playwright](https://playwright.dev) and run against your Clerk development instance and Supabase project:
+
+```bash
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+They create their own test user and clean up after themselves. Details are in [`e2e/README.md`](e2e/README.md).
+
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.
 2. In the [Vercel dashboard](https://vercel.com/new), choose **Add New → Project** and import the repo. Vercel detects Next.js, so the default build settings are correct.
-3. Before the first deploy, add the four variables from step 2 under **Environment Variables**. Add `NEXT_PUBLIC_SITE_URL` too if you use a custom domain.
+3. Before the first deploy, add the four variables from step 2 under **Environment Variables**. Add `NEXT_PUBLIC_SITE_URL` too if you use a custom domain, and `NEXT_PUBLIC_SUPPORT_EMAIL` to show the help link.
 4. Click **Deploy**. Every push to `main` deploys to production after that, and every other branch gets a preview URL.
 
 `NEXT_PUBLIC_*` variables are baked in at build time. After changing one, redeploy (**Deployments → ⋯ → Redeploy**).
@@ -134,8 +146,9 @@ Re-running the SQL replaces earlier seed data. Every list whose share id ends in
 | `/` | Everyone | Sign in / sign up |
 | `/lists` | Signed in | Your lists |
 | `/create` | Signed in | New list |
-| `/list/[listId]` | Owner | Add/remove items, share |
-| `/profile` | Signed in | Account and sign out |
+| `/list/[listId]` | Owner | Add, edit and remove items; edit or delete the list; share |
+| `/profile` | Signed in | Account, privacy, help and sign out |
+| `/privacy` | Everyone | How surprise mode works and who can open a list |
 | `/w/[shareId]` | Anyone with the link | View a list and claim gifts, no account needed |
 
 - **Route protection:** [`proxy.ts`](proxy.ts) sends signed-out visitors away from the owner pages.

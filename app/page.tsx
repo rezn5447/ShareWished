@@ -80,6 +80,14 @@ export default function SignIn() {
             Open their list
           </Link>
         </p>
+        <nav className="mt-4 flex justify-center gap-4 text-xs text-muted" aria-label="Legal">
+          <Link href="/privacy" className="underline underline-offset-4">
+            Privacy
+          </Link>
+          <Link href="/terms" className="underline underline-offset-4">
+            Terms
+          </Link>
+        </nav>
       </div>
     </MobileScreen>
   )

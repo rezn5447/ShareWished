@@ -1,7 +1,8 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BellIcon, EyeOffIcon, HelpCircleIcon, LogOutIcon, ShieldIcon } from 'lucide-react'
+import { ChevronRightIcon, EyeOffIcon, HelpCircleIcon, LogOutIcon, ShieldIcon } from 'lucide-react'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
@@ -9,10 +10,20 @@ import { BottomNav } from '@/components/BottomNav'
 import { useWishlistApi } from '@/lib/wishlist-api'
 import { initials } from '@/utils/format'
 import { Wishlist } from '@/types/wishlist'
+// Inlined at build time. The help row is left out until an inbox is set up.
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL
 const rows = [
-  { Icon: BellIcon, label: 'Notifications', hint: 'New items, shared lists' },
-  { Icon: ShieldIcon, label: 'Privacy', hint: 'Who can open your links' },
-  { Icon: HelpCircleIcon, label: 'Help & feedback', hint: 'We read everything' },
+  { Icon: ShieldIcon, label: 'Privacy', hint: 'Who can open your links', href: '/privacy' },
+  ...(SUPPORT_EMAIL
+    ? [
+        {
+          Icon: HelpCircleIcon,
+          label: 'Help & feedback',
+          hint: 'We read everything',
+          href: `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Wishlisted feedback')}`,
+        },
+      ]
+    : []),
 ]
 
 export default function Profile() {
@@ -70,10 +81,10 @@ export default function Profile() {
           </p>
         </section>
         <section className="mt-3 overflow-hidden rounded-xl2 border border-line bg-paper">
-          {rows.map(({ Icon, label, hint }, index) => (
-            <button
+          {rows.map(({ Icon, label, hint, href }, index) => (
+            <Link
               key={label}
-              type="button"
+              href={href}
               className={`flex w-full items-center gap-3 px-4 py-4 text-left transition active:bg-cream ${
                 index > 0 ? 'border-t border-line' : ''
               }`}
@@ -83,7 +94,8 @@ export default function Profile() {
                 <span className="block text-sm font-semibold text-ink">{label}</span>
                 <span className="block text-xs text-muted">{hint}</span>
               </span>
-            </button>
+              <ChevronRightIcon className="h-4 w-4 text-muted" aria-hidden="true" />
+            </Link>
           ))}
         </section>
         <button
