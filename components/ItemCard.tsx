@@ -1,12 +1,14 @@
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
-import { CheckIcon, ExternalLinkIcon, StarIcon, Trash2Icon } from 'lucide-react'
+import { CheckIcon, ExternalLinkIcon, PencilIcon, StarIcon, Trash2Icon } from 'lucide-react'
 import { WishlistItem } from '@/types/wishlist'
 import { formatPrice } from '@/utils/format'
 interface ItemCardProps {
   item: WishlistItem
   mode: 'owner' | 'gifter'
+  /** Owner only. */
+  onEdit?: (item: WishlistItem) => void
   /** Owner only. */
   onRemove?: (item: WishlistItem) => void
   /** Gifter only. */
@@ -15,7 +17,7 @@ interface ItemCardProps {
   /** Gifter only — true when the current visitor is the one who claimed it. */
   claimedByMe?: boolean
 }
-export function ItemCard({ item, mode, onRemove, onClaim, onUndo, claimedByMe }: ItemCardProps) {
+export function ItemCard({ item, mode, onEdit, onRemove, onClaim, onUndo, claimedByMe }: ItemCardProps) {
   const purchased = mode === 'gifter' && Boolean(item.purchase)
   return (
     <motion.article
@@ -37,7 +39,7 @@ export function ItemCard({ item, mode, onRemove, onClaim, onUndo, claimedByMe }:
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-1">
             <h3
               className={`flex-1 text-[15px] font-semibold leading-snug text-ink ${
                 purchased ? 'opacity-70' : ''
@@ -45,6 +47,16 @@ export function ItemCard({ item, mode, onRemove, onClaim, onUndo, claimedByMe }:
             >
               {item.title}
             </h3>
+            {mode === 'owner' && onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(item)}
+                aria-label={`Edit ${item.title}`}
+                className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-cream active:scale-95"
+              >
+                <PencilIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
             {mode === 'owner' && onRemove && (
               <button
                 type="button"

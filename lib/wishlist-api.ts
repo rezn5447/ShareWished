@@ -93,16 +93,20 @@ function makeShareId(title: string): string {
   return `${slug || 'list'}-${suffix}`
 }
 
-export interface NewListInput {
+/** The parts of a list its owner fills in, on create and on edit. */
+export interface ListDetailsInput {
   title: string
   occasion: string
   eventDate?: string
   note?: string
   cover: CoverKey
+}
+export interface NewListInput extends ListDetailsInput {
   ownerId: string
   ownerName: string
 }
-export interface NewItemInput {
+/** The parts of an item its owner fills in, on add and on edit. */
+export interface ItemDetailsInput {
   title: string
   url: string
   retailer: string
@@ -111,6 +115,7 @@ export interface NewItemInput {
   note?: string
   priority: Priority
 }
+export type NewItemInput = ItemDetailsInput
 
 /**
  * Thin data-access layer over the `wishlists` / `wishlist_items` / `purchases`
@@ -208,6 +213,30 @@ export function useWishlistApi() {
     [supabase],
   )
 
+  /**
+   * Saves the whole form: optional fields left out are cleared. Only the
+   * owner-editable columns are written; owner, share id and dates stay put.
+   */
+  const updateList = useCallback(
+    async (listId: string, input: ListDetailsInput): Promise<void> => {
+      const { error } = await supabase
+        .from('wishlists')
+        .update({
+          title: input.title,
+          occasion: input.occasion,
+          event_date: input.eventDate ?? null,
+          note: input.note ?? null,
+          cover: input.cover,
+        })
+        .eq('id', listId)
+        // RLS turns someone else's list into "0 rows", not an error.
+        .select('id')
+        .single()
+      if (error) throw error
+    },
+    [supabase],
+  )
+
   const deleteList = useCallback(
     async (listId: string) => {
       const { error } = await supabase.from('wishlists').delete().eq('id', listId)
@@ -230,6 +259,33 @@ export function useWishlistApi() {
           note: input.note ?? null,
           priority: input.priority,
         })
+        .select('*')
+        .single()
+      if (error) throw error
+      return mapItem(data)
+    },
+    [supabase],
+  )
+
+  /**
+   * Same rules as updateList. Claims stay attached to the item, which is why
+   * the edit sheet steers owners towards adding a new item instead of
+   * swapping in a different product.
+   */
+  const updateItem = useCallback(
+    async (itemId: string, input: ItemDetailsInput): Promise<WishlistItem> => {
+      const { data, error } = await supabase
+        .from('wishlist_items')
+        .update({
+          title: input.title,
+          url: input.url,
+          retailer: input.retailer,
+          image: input.image,
+          price: input.price,
+          note: input.note ?? null,
+          priority: input.priority,
+        })
+        .eq('id', itemId)
         .select('*')
         .single()
       if (error) throw error
@@ -276,8 +332,10 @@ export function useWishlistApi() {
       fetchOwnerList,
       fetchSharedList,
       createList,
+      updateList,
       deleteList,
       addItem,
+      updateItem,
       removeItem,
       markPurchased,
       undoPurchase,
@@ -287,8 +345,10 @@ export function useWishlistApi() {
       fetchOwnerList,
       fetchSharedList,
       createList,
+      updateList,
       deleteList,
       addItem,
+      updateItem,
       removeItem,
       markPurchased,
       undoPurchase,

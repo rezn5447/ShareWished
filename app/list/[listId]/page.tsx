@@ -1,31 +1,36 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { EyeOffIcon, PlusIcon, Share2Icon } from 'lucide-react'
+import { EyeOffIcon, PencilIcon, PlusIcon, Share2Icon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 import { ItemCard } from '@/components/ItemCard'
-import { AddItemSheet } from '@/components/AddItemSheet'
+import { ItemSheet } from '@/components/ItemSheet'
+import { EditListSheet } from '@/components/EditListSheet'
 import { ShareSheet } from '@/components/ShareSheet'
 import { useWishlistApi } from '@/lib/wishlist-api'
 import { getCover } from '@/data/covers'
 import { daysUntil, formatEventDate, formatPrice } from '@/utils/format'
-import { Wishlist } from '@/types/wishlist'
+import { Wishlist, WishlistItem } from '@/types/wishlist'
 
 export default function ListDetail() {
   const { listId } = useParams<{ listId: string }>()
   const { user } = useUser()
   const api = useWishlistApi()
+  const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
+  const [editListOpen, setEditListOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<WishlistItem | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   const [list, setList] = useState<Wishlist | null | undefined>(undefined)
 
+  // Returns the fetch so sheets can wait for the saved change to show before closing.
   const refresh = useCallback(() => {
-    if (!user) return
-    api.fetchOwnerList(listId, user.id).then(setList)
+    if (!user) return Promise.resolve()
+    return api.fetchOwnerList(listId, user.id).then(setList)
   }, [api, listId, user])
 
   useEffect(() => {
@@ -76,9 +81,19 @@ export default function ListDetail() {
         }
       />
       <section className={`mx-5 mt-2 rounded-xl2 ${cover.bg} p-5`}>
-        <span className="text-3xl" aria-hidden="true">
-          {cover.emoji}
-        </span>
+        <div className="flex items-start justify-between">
+          <span className="text-3xl" aria-hidden="true">
+            {cover.emoji}
+          </span>
+          <button
+            type="button"
+            onClick={() => setEditListOpen(true)}
+            aria-label="Edit list details"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/70 text-ink transition active:scale-95"
+          >
+            <PencilIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
         <h2 className="mt-2 font-display text-2xl font-semibold leading-tight text-ink">
           {list.title}
         </h2>
@@ -135,6 +150,7 @@ export default function ListDetail() {
                 key={item.id}
                 item={item}
                 mode="owner"
+                onEdit={setEditingItem}
                 onRemove={() => api.removeItem(item.id).then(refresh)}
               />
             ))}
@@ -152,10 +168,26 @@ export default function ListDetail() {
         </button>
         <div className="h-[env(safe-area-inset-bottom)]" />
       </div>
-      <AddItemSheet
+      <ItemSheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onAdd={(input) => api.addItem(list.id, input).then(refresh)}
+        onSave={(input) => api.addItem(list.id, input).then(refresh)}
+      />
+      <ItemSheet
+        open={editingItem !== null}
+        onClose={() => setEditingItem(null)}
+        item={editingItem ?? undefined}
+        onSave={(input) => api.updateItem(editingItem!.id, input).then(refresh)}
+      />
+      <EditListSheet
+        open={editListOpen}
+        onClose={() => setEditListOpen(false)}
+        list={list}
+        onSave={(details) => api.updateList(list.id, details).then(refresh)}
+        onDelete={async () => {
+          await api.deleteList(list.id)
+          router.push('/lists')
+        }}
       />
       <ShareSheet
         open={shareOpen}
