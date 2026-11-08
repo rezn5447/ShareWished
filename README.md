@@ -84,6 +84,17 @@ To check the code with ESLint:
 npm run lint
 ```
 
+## Tests
+
+End-to-end tests use [Playwright](https://playwright.dev) and run against your Clerk development instance and Supabase project:
+
+```bash
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+They create their own test user and clean up after themselves. Details are in [`e2e/README.md`](e2e/README.md).
+
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.

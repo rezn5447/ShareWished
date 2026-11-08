@@ -18,10 +18,12 @@ export default function CreateList() {
   const [eventDate, setEventDate] = useState('')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!title.trim() || !user || submitting) return
     setSubmitting(true)
+    setError('')
     try {
       const selected = covers.find((option) => option.key === cover)
       const list = await api.createList({
@@ -34,6 +36,8 @@ export default function CreateList() {
         ownerName: user.fullName ?? 'A friend',
       })
       router.push(`/list/${list.id}`)
+    } catch {
+      setError("Couldn't create the list. Try again in a moment.")
     } finally {
       setSubmitting(false)
     }
@@ -103,9 +107,15 @@ export default function CreateList() {
             className="w-full resize-none rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm text-ink focus:border-ink focus:outline-none"
           />
         </div>
+        {error && (
+          <p role="alert" className="text-xs font-medium text-accent">
+            {error}
+          </p>
+        )}
+        {/* Disabled until Clerk has loaded the user; a click before that used to do nothing. */}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !user}
           className="w-full rounded-full bg-accent py-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-40"
         >
           {submitting ? 'Creating…' : 'Create list'}

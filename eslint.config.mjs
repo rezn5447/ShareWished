@@ -5,7 +5,12 @@ const eslintConfig = [
   ...nextVitals,
   ...nextTs,
   {
-    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts'],
+    // Playwright fixtures take a callback named `use`; it isn't React's hook.
+    files: ['e2e/**'],
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
+  {
+    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'playwright-report/**', 'test-results/**'],
   },
 ]
 
