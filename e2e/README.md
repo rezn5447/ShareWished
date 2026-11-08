@@ -41,6 +41,8 @@ E2E_BASE_URL=https://… npm run test:e2e   # run against an already running dep
 | `public.spec.ts` | Landing page, protected routes redirect, link previews need sign-in, broken share link |
 | `sign-in.spec.ts` | Email-code sign-in through the real form, sign out |
 | `owner.spec.ts` | Create a list, add/remove items, link-preview autofill, validation, share sheet |
+| `editing.spec.ts` | Edit items and list details, clear optional fields, failed saves, delete a list, editing a claimed item |
+| `profile.spec.ts` | Profile rows link somewhere, `/privacy` is public |
 | `surprise-mode.spec.ts` | Claim, undo, race for the same gift, "everything's covered", owner never sees claims (UI, page HTML and database) |
 | `link-preview.spec.ts` | The preview API won't read localhost, private or metadata addresses |
 
