@@ -6,7 +6,8 @@ Wishlist app: owners make lists and share a link; friends claim gifts without th
 
 - `npm run dev` — local server on :3000
 - `npm run lint` — ESLint (flat config, `eslint-config-next`)
-- `npx tsc --noEmit` — type-check (there is no test suite yet)
+- `npx tsc --noEmit` — type-check
+- `npm run test:e2e` — Playwright end-to-end tests (builds and serves on :3100; see `e2e/README.md`). They use a dedicated Clerk user, `e2e-owner+clerk_test@example.com`, not the seed users, and delete the lists they create.
 - `npm run seed` — creates Clerk test users and writes `supabase/seed.generated.sql` (gitignored; run it in the Supabase SQL editor). Refuses non-`sk_test_` keys.
 
 Test sign-in: `maya+clerk_test@example.com` (also jordan, priya, theo, ben), code `424242`.
@@ -25,7 +26,7 @@ An owner must never be able to learn which of their items are claimed or by whom
 - `purchases` has RLS on and **no policies, no grants** to `anon`/`authenticated`. That's deliberate — don't "fix" the advisor warning by adding a policy.
 - All gifter access goes through three `security definer` functions (callable by `anon` on purpose): `get_shared_list` (strips purchase data when the caller is the owner), `claim_item` (one claim per item, returns a claim token), `unclaim_item` (requires that token). The gifter's browser keeps the token in `localStorage`.
 - `anon` cannot select from any table directly; lists are reachable only by `share_id`.
-- Any change touching these functions, grants, or policies needs a check that the owner path still gets `purchase: null`.
+- Any change touching these functions, grants, or policies needs a check that the owner path still gets `purchase: null`: run `npx playwright test surprise-mode`.
 
 ## Database changes
 
@@ -42,3 +43,13 @@ An owner must never be able to learn which of their items are claimed or by whom
 - Mobile-first UI: screens wrap in `MobileScreen`, actions open bottom `Sheet`s.
 - Prices are USD only; non-USD prices from scraped pages are dropped.
 - Comments explain *why*, briefly; match the existing density.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

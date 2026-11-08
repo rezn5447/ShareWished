@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "seed": "node scripts/seed-test-users.mjs"
+    "seed": "node scripts/seed-test-users.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.1",
@@ -19,10 +21,14 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@clerk/backend": "^3.27.0",
+    "@clerk/testing": "^2.2.55",
+    "@playwright/test": "^1.65.0",
     "@types/node": "22.9.0",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "autoprefixer": "10.4.20",
+    "dotenv": "^17.2.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.0",
     "postcss": "8.4.49",
