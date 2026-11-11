@@ -21,13 +21,18 @@ export default function CreateList() {
           errorMessage="Couldn't create the list. Try again in a moment."
           // Disabled until Clerk has loaded the user; a click before that used to do nothing.
           disabled={!user}
-          onSave={async (details) => {
+          // Email sign-ups have no name, and friends would see the list as "A's …".
+          askOwnerName={Boolean(user) && !user?.fullName?.trim()}
+          onSave={async (details, typedName) => {
             if (!user) return
-            const list = await api.createList({
-              ...details,
-              ownerId: user.id,
-              ownerName: user.fullName ?? 'A friend',
-            })
+            const ownerName = user.fullName?.trim() || typedName || 'A friend'
+            if (typedName) {
+              // Remember it for next time and for the greeting. Best effort: Clerk
+              // refuses this if names are turned off for the instance.
+              const [firstName, ...rest] = typedName.split(/\s+/)
+              await user.update({ firstName, lastName: rest.join(' ') || undefined }).catch(() => {})
+            }
+            const list = await api.createList({ ...details, ownerId: user.id, ownerName })
             router.push(`/list/${list.id}`)
           }}
         />

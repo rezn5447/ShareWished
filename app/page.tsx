@@ -75,10 +75,7 @@ export default function SignIn() {
           </Show>
         </div>
         <p className="mt-auto pt-8 text-center text-xs text-muted">
-          Got a link from a friend?{' '}
-          <Link href="/w/maya-30" className="font-semibold text-ink underline underline-offset-4">
-            Open their list
-          </Link>
+          Got a link from a friend? Just open it. You don&apos;t need an account to claim a gift.
         </p>
         <nav className="mt-4 flex justify-center gap-4 text-xs text-muted" aria-label="Legal">
           <Link href="/privacy" className="underline underline-offset-4">

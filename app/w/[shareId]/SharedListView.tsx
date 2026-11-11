@@ -112,7 +112,7 @@ export function SharedListView() {
           <p className="mt-1 text-xs font-medium text-ink/60">
             {list.occasion}
             {formatEventDate(list.eventDate) && ` · ${formatEventDate(list.eventDate)}`}
-            {days !== null && days >= 0 && ` · ${days} days away`}
+            {days !== null && days >= 0 && ` · ${days} ${days === 1 ? 'day' : 'days'} away`}
           </p>
           {list.note && (
             <p className="mt-3 rounded-2xl bg-paper/70 p-3 text-sm leading-relaxed text-ink/80">
