@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react'
 import { LinkIcon, Loader2Icon } from 'lucide-react'
 import { Sheet } from './Sheet'
-import { ItemDetailsInput } from '@/lib/wishlist-api'
+import { NewItemInput } from '@/lib/wishlist-api'
 import { LinkPreview, Priority, WishlistItem } from '@/types/wishlist'
 import { retailerFromUrl } from '@/utils/format'
 import { fetchLinkPreview, parseSharedText, PLACEHOLDER_IMAGE } from '@/utils/linkPreview'
@@ -12,7 +12,8 @@ interface ItemSheetProps {
   /** The item being edited. Leave out to add a new one. */
   item?: WishlistItem
   /** Resolves once saved. A rejection keeps the sheet open with an error. */
-  onSave: (input: ItemDetailsInput) => Promise<unknown>
+  /** Edits ignore `preview`; it only applies to new items. */
+  onSave: (input: NewItemInput) => Promise<unknown>
 }
 const priorities: Array<{ value: Priority; label: string }> = [
   { value: 'low', label: 'Nice to have' },
@@ -97,6 +98,9 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
         price: Number(price) || 0,
         note: note.trim() || undefined,
         priority,
+        preview: !item && preview?.previewId && lookupFor.current === link
+          ? { id: preview.previewId, filledTitle: preview.title }
+          : undefined,
       })
       onDone()
     } catch {

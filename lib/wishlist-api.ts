@@ -115,7 +115,14 @@ export interface ItemDetailsInput {
   note?: string
   priority: Priority
 }
-export type NewItemInput = ItemDetailsInput
+export interface NewItemInput extends ItemDetailsInput {
+  /** The link lookup this item came from, if it finished for this link. */
+  preview?: {
+    id: string
+    /** The name the form was filled with, before the person changed anything. */
+    filledTitle: string
+  }
+}
 
 /**
  * Thin data-access layer over the `wishlists` / `wishlist_items` / `purchases`
@@ -262,6 +269,21 @@ export function useWishlistApi() {
         .select('*')
         .single()
       if (error) throw error
+      if (input.preview) {
+        // Measurement only (see the link_previews migration), so a failure
+        // here must not undo or fail the add.
+        const { error: logError } = await supabase
+          .from('link_previews')
+          .update({
+            item_id: data.id,
+            filled_title: input.preview.filledTitle,
+            saved_title: input.title,
+            saved_price: input.price,
+            saved_at: new Date().toISOString(),
+          })
+          .eq('id', input.preview.id)
+        if (logError) console.error('link preview log failed', logError)
+      }
       return mapItem(data)
     },
     [supabase],
