@@ -12,6 +12,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      link_previews: {
+        Row: {
+          created_at: string
+          filled_title: string | null
+          id: string
+          image: string
+          image_from: string
+          item_id: string | null
+          owner_id: string
+          price: number
+          price_from: string
+          resolved_url: string
+          retailer: string
+          saved_at: string | null
+          saved_price: number | null
+          saved_title: string | null
+          source: string
+          title: string
+          title_from: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          filled_title?: string | null
+          id?: string
+          image: string
+          image_from: string
+          item_id?: string | null
+          owner_id?: string
+          price?: number
+          price_from: string
+          resolved_url: string
+          retailer: string
+          saved_at?: string | null
+          saved_price?: number | null
+          saved_title?: string | null
+          source: string
+          title: string
+          title_from: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          filled_title?: string | null
+          id?: string
+          image?: string
+          image_from?: string
+          item_id?: string | null
+          owner_id?: string
+          price?: number
+          price_from?: string
+          resolved_url?: string
+          retailer?: string
+          saved_at?: string | null
+          saved_price?: number | null
+          saved_title?: string | null
+          source?: string
+          title?: string
+          title_from?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'link_previews_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: true
+            referencedRelation: 'wishlist_items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       purchases: {
         Row: {
           claim_token: string
