@@ -39,6 +39,14 @@ export function ItemCard({ item, mode, onEdit, onRemove, onClaim, onUndo, claime
           />
         </div>
         <div className="min-w-0 flex-1">
+          {item.editedAt && (
+            // Tells gifters the details changed since they may have last looked.
+            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <time dateTime={item.editedAt} title={`Edited ${new Date(item.editedAt).toLocaleString()}`}>
+                Edited
+              </time>
+            </p>
+          )}
           <div className="flex items-start gap-1">
             <h3
               className={`flex-1 text-[15px] font-semibold leading-snug text-ink ${

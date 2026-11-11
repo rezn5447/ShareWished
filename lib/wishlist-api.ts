@@ -14,6 +14,7 @@ interface ItemRow {
   note: string | null
   priority: string
   added_at: string
+  edited_at: string | null
 }
 interface ListRow {
   id: string
@@ -61,6 +62,7 @@ function mapItem(row: ItemRow, purchase?: PurchaseRow | null): WishlistItem {
     note: row.note ?? undefined,
     priority: row.priority as Priority,
     addedAt: row.added_at,
+    editedAt: row.edited_at ?? undefined,
     purchase: purchase ? { by: purchase.gifter_name, at: purchase.purchased_at } : undefined,
   }
 }

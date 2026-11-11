@@ -47,6 +47,7 @@ export type Database = {
       wishlist_items: {
         Row: {
           added_at: string
+          edited_at: string | null
           id: string
           image: string
           note: string | null
@@ -59,6 +60,7 @@ export type Database = {
         }
         Insert: {
           added_at?: string
+          edited_at?: string | null
           id?: string
           image: string
           note?: string | null
@@ -71,6 +73,7 @@ export type Database = {
         }
         Update: {
           added_at?: string
+          edited_at?: string | null
           id?: string
           image?: string
           note?: string | null
