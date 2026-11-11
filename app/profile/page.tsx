@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, EyeOffIcon, HelpCircleIcon, LogOutIcon, ShieldIcon } from 'lucide-react'
@@ -47,12 +48,26 @@ export default function Profile() {
       <TopBar title="You" />
       <main className="px-5 pt-4">
         <section className="flex items-center gap-4 rounded-xl2 border border-line bg-paper p-4 shadow-card">
-          <span
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft font-display text-lg font-semibold text-accent"
-            aria-hidden="true"
-          >
-            {initials(user?.fullName ?? 'You')}
-          </span>
+          {/* Clerk copies the photo from Google at sign-in. Without one, imageUrl is a generic
+              placeholder, so hasImage decides whether to show it or our initials. */}
+          {user?.hasImage ? (
+            <Image
+              src={user.imageUrl}
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+              data-testid="profile-photo"
+            />
+          ) : (
+            <span
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent-soft font-display text-lg font-semibold text-accent"
+              aria-hidden="true"
+              data-testid="profile-initials"
+            >
+              {initials(user?.fullName ?? 'You')}
+            </span>
+          )}
           <div className="min-w-0">
             <p className="font-display text-lg font-semibold text-ink">{user?.fullName}</p>
             <p className="truncate text-xs text-muted">
