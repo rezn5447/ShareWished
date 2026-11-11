@@ -3,7 +3,7 @@ import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 
 export const metadata: Metadata = {
-  title: 'Privacy · Wishlisted',
+  title: 'Privacy · Gimme',
   description: 'How surprise mode works, and who can open your lists.',
 }
 

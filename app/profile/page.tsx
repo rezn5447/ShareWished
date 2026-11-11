@@ -20,7 +20,7 @@ const rows = [
           Icon: HelpCircleIcon,
           label: 'Help & feedback',
           hint: 'We read everything',
-          href: `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Wishlisted feedback')}`,
+          href: `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Gimme feedback')}`,
         },
       ]
     : []),
