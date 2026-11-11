@@ -37,3 +37,6 @@ supabase/seed.generated.sql
 /blob-report/
 /playwright/.cache/
 /e2e/.auth/
+
+# Claude Code worktrees live here; they are separate checkouts, never content.
+.claude/worktrees/
