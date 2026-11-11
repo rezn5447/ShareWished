@@ -161,3 +161,7 @@ Re-running the SQL replaces earlier seed data. Every list whose share id ends in
 ## Known gaps
 
 - **Product links:** [`app/api/link-preview`](app/api/link-preview/route.ts) reads a page's product details: schema.org product data, then Open Graph tags, then the page title. Shops that block bots, Amazon included, fall back to a name read from the link itself, and the price has to be typed in.
+
+## License
+
+MIT, see `LICENSE`.
