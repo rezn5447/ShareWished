@@ -47,4 +47,6 @@ export interface LinkPreview {
   retailer: string
   /** 'page' when the shop gave us details; 'link' when it's only a guess from the URL. */
   source: 'page' | 'link'
+  /** Row in `link_previews` for this lookup; absent if it couldn't be logged. */
+  previewId?: string
 }

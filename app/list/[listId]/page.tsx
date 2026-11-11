@@ -100,12 +100,13 @@ export default function ListDetail() {
         <p className="mt-1 text-xs font-medium text-ink/60">
           {list.occasion}
           {formatEventDate(list.eventDate) && ` · ${formatEventDate(list.eventDate)}`}
-          {days !== null && days >= 0 && ` · ${days} days away`}
+          {days !== null && days >= 0 && ` · ${days} ${days === 1 ? 'day' : 'days'} away`}
         </p>
         {list.note && <p className="mt-3 text-sm leading-relaxed text-ink/75">{list.note}</p>}
         <div className="mt-4 flex gap-4 border-t border-ink/10 pt-3 text-xs text-ink/60">
           <span>
-            <span className="font-semibold text-ink">{list.items.length}</span> items
+            <span className="font-semibold text-ink">{list.items.length}</span>{' '}
+            {list.items.length === 1 ? 'item' : 'items'}
           </span>
           <span>
             <span className="font-semibold text-ink">{formatPrice(total)}</span> total

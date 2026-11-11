@@ -1,6 +1,8 @@
 import { lookup } from 'node:dns/promises'
 import { BlockList, isIP } from 'node:net'
+import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { logLinkPreview, type PreviewLogEntry } from '@/lib/link-preview/log'
 import { parseProductHtml, type PageDetails } from '@/lib/link-preview/parse-html'
 import { parseShopifyProduct, shopifyProductJsonUrl } from '@/lib/link-preview/shopify'
 import { isValidUrl } from '@/utils/format'
@@ -39,16 +41,24 @@ export async function GET(request: NextRequest) {
     ? parseProductHtml(page.body, page.url)
     : { title: '', image: '', price: 0 }
 
+  // Track where each field came from before the fallbacks blur it, for the log.
+  const from: PreviewLogEntry['from'] = {
+    title: found.title ? 'page' : 'none',
+    price: found.price ? 'page' : 'none',
+    image: found.image ? 'page' : 'none',
+  }
   if (!found.title || !found.image || !found.price) {
     const shopify = await fetchShopifyProduct(resolvedUrl).catch(() => null)
     if (shopify) {
-      found.title ||= shopify.title
-      found.image ||= shopify.image
-      found.price ||= shopify.price
+      if (!found.title && shopify.title) [found.title, from.title] = [shopify.title, 'shopify']
+      if (!found.image && shopify.image) [found.image, from.image] = [shopify.image, 'shopify']
+      if (!found.price && shopify.price) [found.price, from.price] = [shopify.price, 'shopify']
     }
   }
 
+  // The guess never has a price or a real photo, only a placeholder.
   const guess = previewFromUrl(resolvedUrl)
+  if (from.title === 'none' && guess.title) from.title = 'link'
   const preview: LinkPreview = {
     title: found.title || guess.title,
     image: found.image || guess.image,
@@ -56,7 +66,20 @@ export async function GET(request: NextRequest) {
     retailer: guess.retailer,
     source: found.title || found.image ? 'page' : 'link',
   }
+
+  preview.previewId = await logPreview({ url, resolvedUrl, preview, from })
   return NextResponse.json(preview)
+}
+
+/** The log is measurement only: no failure here may cost the person their preview. */
+async function logPreview(entry: PreviewLogEntry): Promise<string | undefined> {
+  try {
+    const token = await (await auth()).getToken()
+    return token ? await logLinkPreview(token, entry) : undefined
+  } catch (error) {
+    console.error('link preview log failed', error)
+    return undefined
+  }
 }
 
 async function fetchShopifyProduct(pageUrl: string): Promise<PageDetails | null> {

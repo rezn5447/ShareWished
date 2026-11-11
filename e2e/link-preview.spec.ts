@@ -38,6 +38,43 @@ test.describe('link preview API', () => {
     }
   })
 
+  // The baseline for the AI work: what the reader found, and what the person saved.
+  test('logs each lookup and what was saved from it', async ({ ownerPage: page, ownerDb, lists }, testInfo) => {
+    const list = await lists.create('Log', [])
+    // A blocked local address, so the reader can only guess from the link: no network needed.
+    // Unique per run, so a row left by a crashed run can't match.
+    const link = `http://127.0.0.1:${port}/products/brass-reading-lamp?run=${testInfo.testId}-${Date.now()}`
+    await page.goto(`/list/${list.id}`)
+    await page.getByRole('button', { name: 'Add your first item' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Add an item' })
+    await sheet.getByLabel('Link').fill(link)
+    await sheet.getByLabel('Link').blur()
+    await expect(sheet.getByLabel('Item name')).toHaveValue('Brass Reading Lamp')
+    await sheet.getByLabel('Item name').fill('Brass Lamp')
+    await sheet.getByLabel('Price (USD)').fill('129')
+    await sheet.getByRole('button', { name: 'Add to wishlist' }).click()
+    await expect(sheet).toBeHidden()
+
+    await expect
+      .poll(async () => {
+        const { data } = await ownerDb.from('link_previews').select('*').eq('url', link)
+        return data
+      })
+      .toEqual([
+        expect.objectContaining({
+          source: 'link',
+          title: 'Brass Reading Lamp',
+          title_from: 'link',
+          price_from: 'none',
+          image_from: 'none',
+          item_id: expect.any(String),
+          filled_title: 'Brass Reading Lamp',
+          saved_title: 'Brass Lamp',
+          saved_price: 129,
+        }),
+      ])
+  })
+
   test('rejects things that are not web links', async ({ ownerPage: page }) => {
     await page.goto('/lists')
     for (const target of ['file:///etc/passwd', 'not a url', 'javascript:alert(1)']) {
