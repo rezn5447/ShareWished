@@ -1,7 +1,9 @@
 'use client'
 import { useCallback, useMemo } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import { useSupabaseClient } from './supabase/client'
 import { CoverKey, Priority, Wishlist, WishlistItem } from '@/types/wishlist'
+import { ITEM_IMAGE_BUCKET, uploadedImagePath } from '@/utils/itemImage'
 
 interface ItemRow {
   id: string
@@ -114,6 +116,8 @@ export interface ItemDetailsInput {
   price: number
   note?: string
   priority: Priority
+  /** A photo the owner picked, already shrunk. Uploaded on save and used instead of `image`. */
+  imageFile?: Blob
 }
 export interface NewItemInput extends ItemDetailsInput {
   /** The link lookup this item came from, if it finished for this link. */
@@ -132,6 +136,40 @@ export interface NewItemInput extends ItemDetailsInput {
  */
 export function useWishlistApi() {
   const supabase = useSupabaseClient()
+  const { userId } = useAuth()
+
+  /** Stores a picked photo under the owner's folder and returns its public URL. */
+  const uploadImage = useCallback(
+    async (file: Blob): Promise<string> => {
+      if (!userId) throw new Error('Sign in to add a photo.')
+      // Random name, never overwritten: the bucket has no UPDATE policy on purpose.
+      const path = `${userId}/${crypto.randomUUID()}.jpg`
+      const { error } = await supabase.storage
+        .from(ITEM_IMAGE_BUCKET)
+        .upload(path, file, { contentType: 'image/jpeg', upsert: false })
+      if (error) throw error
+      return supabase.storage.from(ITEM_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl
+    },
+    [supabase, userId],
+  )
+
+  /**
+   * Deletes uploaded photos nothing points at any more. Best effort: the item
+   * change already succeeded, and a leftover file is only wasted space.
+   * Shop photos and other people's files are skipped.
+   */
+  const removeImages = useCallback(
+    async (imageUrls: string[]) => {
+      if (!userId) return
+      const paths = imageUrls
+        .map((url) => uploadedImagePath(url, userId))
+        .filter((path): path is string => path !== null)
+      if (paths.length === 0) return
+      const { error } = await supabase.storage.from(ITEM_IMAGE_BUCKET).remove(paths)
+      if (error) console.error('item photo cleanup failed', error)
+    },
+    [supabase, userId],
+  )
 
   const fetchMyLists = useCallback(
     async (ownerId: string): Promise<Wishlist[]> => {
@@ -246,14 +284,18 @@ export function useWishlistApi() {
 
   const deleteList = useCallback(
     async (listId: string) => {
+      // Items go with the list (on delete cascade), so note their photos first.
+      const { data: items } = await supabase.from('wishlist_items').select('image').eq('wishlist_id', listId)
       const { error } = await supabase.from('wishlists').delete().eq('id', listId)
       if (error) throw error
+      await removeImages((items ?? []).map((item) => item.image))
     },
-    [supabase],
+    [supabase, removeImages],
   )
 
   const addItem = useCallback(
     async (listId: string, input: NewItemInput): Promise<WishlistItem> => {
+      const image = input.imageFile ? await uploadImage(input.imageFile) : input.image
       const { data, error } = await supabase
         .from('wishlist_items')
         .insert({
@@ -261,14 +303,17 @@ export function useWishlistApi() {
           title: input.title,
           url: input.url,
           retailer: input.retailer,
-          image: input.image,
+          image,
           price: input.price,
           note: input.note ?? null,
           priority: input.priority,
         })
         .select('*')
         .single()
-      if (error) throw error
+      if (error) {
+        if (image !== input.image) await removeImages([image])
+        throw error
+      }
       if (input.preview) {
         // Measurement only (see the link_previews migration), so a failure
         // here must not undo or fail the add.
@@ -286,7 +331,7 @@ export function useWishlistApi() {
       }
       return mapItem(data)
     },
-    [supabase],
+    [supabase, uploadImage, removeImages],
   )
 
   /**
@@ -296,13 +341,21 @@ export function useWishlistApi() {
    */
   const updateItem = useCallback(
     async (itemId: string, input: ItemDetailsInput): Promise<WishlistItem> => {
+      // Read what's saved rather than trusting the form, so a replaced photo is always cleaned up.
+      const { data: before, error: readError } = await supabase
+        .from('wishlist_items')
+        .select('image')
+        .eq('id', itemId)
+        .single()
+      if (readError) throw readError
+      const image = input.imageFile ? await uploadImage(input.imageFile) : input.image
       const { data, error } = await supabase
         .from('wishlist_items')
         .update({
           title: input.title,
           url: input.url,
           retailer: input.retailer,
-          image: input.image,
+          image,
           price: input.price,
           note: input.note ?? null,
           priority: input.priority,
@@ -310,18 +363,23 @@ export function useWishlistApi() {
         .eq('id', itemId)
         .select('*')
         .single()
-      if (error) throw error
+      if (error) {
+        if (image !== input.image) await removeImages([image])
+        throw error
+      }
+      if (before.image !== data.image) await removeImages([before.image])
       return mapItem(data)
     },
-    [supabase],
+    [supabase, uploadImage, removeImages],
   )
 
   const removeItem = useCallback(
     async (itemId: string) => {
-      const { error } = await supabase.from('wishlist_items').delete().eq('id', itemId)
+      const { data, error } = await supabase.from('wishlist_items').delete().eq('id', itemId).select('image')
       if (error) throw error
+      await removeImages(data.map((item) => item.image))
     },
-    [supabase],
+    [supabase, removeImages],
   )
 
   /** Returns the claim token the gifter needs to undo later. */
