@@ -10,7 +10,8 @@ const eslintConfig = [
     rules: { 'react-hooks/rules-of-hooks': 'off' },
   },
   {
-    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'playwright-report/**', 'test-results/**'],
+    // Python virtualenvs (ai/.venv) bundle JavaScript from packages like PyTorch.
+    ignores: ['.next/**', 'node_modules/**', '**/.venv/**', 'next-env.d.ts', 'playwright-report/**', 'test-results/**'],
   },
 ]
 

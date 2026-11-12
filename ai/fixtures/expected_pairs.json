@@ -1,0 +1,15 @@
+{
+  "_comment": "The first eval cases. Each says the anchor item should score closer to `closer` than to `farther`. Written before the first run; failures get explained in ai/README.md, never fixed by editing this file.",
+  "pairs": [
+    { "anchor": "headphones", "closer": "earbuds", "farther": "jack-adapter", "why": "same job (listening) beats a shared word" },
+    { "anchor": "headphones", "closer": "headphones-dup", "farther": "earbuds", "why": "the same product beats a similar one" },
+    { "anchor": "instant-camera", "closer": "instant-camera-dup", "farther": "camera-night-light", "why": "the same camera beats a camera-shaped toy" },
+    { "anchor": "mug-set", "closer": "mug-set-dup", "farther": "coffee-table-book", "why": "the same mugs beat a shared word (coffee)" },
+    { "anchor": "runners", "closer": "runners-dup", "farther": "runner-rug", "why": "the same shoe beats a shared word (runner)" },
+    { "anchor": "runner-rug", "closer": "throw-blanket", "farther": "runners", "why": "a rug is home decor, not a shoe" },
+    { "anchor": "cookbook", "closer": "skillet", "farther": "coffee-table-book", "why": "cooking beats being a book" },
+    { "anchor": "board-game", "closer": "jigsaw-puzzle", "farther": "wooden-blocks", "why": "a grown-up pastime beats a kids' toy" },
+    { "anchor": "bath-salts", "closer": "candle", "farther": "skillet", "why": "self-care beats kitchen" },
+    { "anchor": "picture-book", "closer": "wooden-blocks", "farther": "mystery-box-set", "why": "for kids beats being a book" }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_comment": "FIXTURE DATA. Made-up wishlist items for the embeddings spike, not real products or real users. The first five mirror scripts/seed-test-users.mjs. category is for reading results only and is never embedded.",
+  "items": [
+    { "id": "headphones", "title": "Studio Wireless Noise-Cancelling Headphones", "note": "For the commute, black please", "category": "tech" },
+    { "id": "mug-set", "title": "Speckled Stoneware Mug Set (2)", "category": "kitchen" },
+    { "id": "cookbook", "title": "Slow Sundays: A Cookbook for Long Mornings", "note": "Meals we can make one-handed", "category": "books" },
+    { "id": "instant-camera", "title": "Instant Film Camera, Silver", "note": "Any instant camera works", "category": "tech" },
+    { "id": "runners", "title": "Everyday Runner, Sage / Bone", "note": "Size 8", "category": "apparel" },
+
+    { "id": "headphones-dup", "title": "Over-Ear Bluetooth Headphones with Active Noise Cancellation, Black", "category": "tech" },
+    { "id": "instant-camera-dup", "title": "Mini Instant Print Camera in Silver", "category": "tech" },
+    { "id": "mug-set-dup", "title": "Set of 2 Handmade Speckled Ceramic Coffee Mugs", "category": "kitchen" },
+    { "id": "runners-dup", "title": "Women's Everyday Sneaker in Sage Green", "category": "apparel" },
+
+    { "id": "jack-adapter", "title": "USB-C to 3.5mm Headphone Jack Adapter", "category": "tech" },
+    { "id": "camera-night-light", "title": "Camera-Shaped Night Light for Kids' Rooms", "category": "kids" },
+    { "id": "coffee-table-book", "title": "Coffee Table Book of Mountain Photography", "category": "books" },
+    { "id": "runner-rug", "title": "Runner Rug for the Hallway, 2 x 8 ft", "category": "home" },
+    { "id": "cookbook-stand", "title": "Bamboo Cookbook Stand", "category": "kitchen" },
+
+    { "id": "earbuds", "title": "Wireless Earbuds with Charging Case", "category": "tech" },
+    { "id": "e-reader", "title": "E-Reader with Warm Front Light", "note": "So I can read in bed without the lamp", "category": "tech" },
+    { "id": "skillet", "title": "10-Inch Cast Iron Skillet", "category": "kitchen" },
+    { "id": "kettle", "title": "Gooseneck Pour-Over Kettle", "note": "For slow weekend coffee", "category": "kitchen" },
+    { "id": "mystery-box-set", "title": "Classic Mystery Novels Box Set", "category": "books" },
+    { "id": "tent", "title": "Two-Person Backpacking Tent", "category": "outdoors" },
+    { "id": "water-bottle", "title": "Insulated Water Bottle, 32 oz", "category": "outdoors" },
+    { "id": "hydration-vest", "title": "Trail Running Hydration Vest", "category": "outdoors" },
+    { "id": "wooden-blocks", "title": "Wooden Building Blocks, 100 Pieces", "category": "kids" },
+    { "id": "picture-book", "title": "The Sleepy Bear: A Bedtime Picture Book", "category": "kids" },
+    { "id": "throw-blanket", "title": "Chunky Knit Throw Blanket", "note": "For curling up with a book", "category": "home" },
+    { "id": "candle", "title": "Cedar and Smoke Soy Candle", "note": "Something cozy for winter", "category": "home" },
+    { "id": "reading-lamp", "title": "Dimmable Reading Lamp", "category": "home" },
+    { "id": "bath-salts", "title": "Lavender Bath Salts", "category": "beauty" },
+    { "id": "board-game", "title": "Cooperative Board Game for 2 to 4 Players", "note": "For game nights with my partner", "category": "games" },
+    { "id": "jigsaw-puzzle", "title": "1000-Piece Jigsaw Puzzle", "category": "games" }
+  ],
+  "_near_duplicates": "Pairs that are the same product worded differently or from another shop. Used to answer whether similarity would catch one item saved twice.",
+  "near_duplicates": [
+    ["headphones", "headphones-dup"],
+    ["instant-camera", "instant-camera-dup"],
+    ["mug-set", "mug-set-dup"],
+    ["runners", "runners-dup"]
+  ]
+}

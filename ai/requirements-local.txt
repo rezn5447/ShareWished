@@ -1,0 +1,3 @@
+-r requirements.txt
+# Local fallback when no VOYAGE_API_KEY is set. Pulls in PyTorch (large download).
+sentence-transformers==6.3.0

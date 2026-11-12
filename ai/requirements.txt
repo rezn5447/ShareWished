@@ -1,0 +1,4 @@
+# Core: Voyage embeddings, numpy for the math, .env loading.
+voyageai==0.6.0
+numpy==2.5.4
+python-dotenv==1.2.4
