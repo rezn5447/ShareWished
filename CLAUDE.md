@@ -16,7 +16,9 @@ Test sign-in: `maya+clerk_test@example.com` (also jordan, priya, theo, ben), cod
 
 - Clerk is the only identity provider. Supabase trusts Clerk session tokens via third-party auth; in Postgres the user id is `auth.jwt() ->> 'sub'` (a Clerk id string, not a uuid). Do not use `auth.uid()`.
 - `lib/supabase/client.ts` is a client-side hook that passes the Clerk token on every request. No token = `anon` role.
-- `lib/wishlist-api.ts` is the only client-side module that talks to Supabase. Keep it that way. The one server-side exception is `lib/shared-list-preview.ts` (always anonymous, feeds share-link metadata and the OG image). It must never expose purchase data, because owners see link previews too.
+- `lib/wishlist-api.ts` is the only client-side module that talks to Supabase. Keep it that way. Two server-side exceptions:
+  - `lib/shared-list-preview.ts` (always anonymous, feeds share-link metadata and the OG image). It must never expose purchase data, because owners see link previews too.
+  - `lib/link-preview/log.ts` inserts into `link_previews` with the caller's own Clerk token, so RLS applies. It must never throw into the preview response.
 - `proxy.ts` is Next 16's replacement for `middleware.ts` — route protection lives there, not in a `middleware.ts`.
 
 ## Surprise mode — the invariant that must not break
@@ -37,6 +39,8 @@ An owner must never be able to learn which of their items are claimed or by whom
 ## Link previews
 
 `app/api/link-preview/route.ts` fetches arbitrary user-supplied URLs server-side. It's signed-in only (via `proxy.ts`) and blocks private/loopback addresses before each hop. Any change there must keep those SSRF checks intact; don't reuse `fetchPage` elsewhere without them.
+
+Every preview is logged to `link_previews` (what each field came from: `page`, `shopify`, `link` or `none`), and `addItem` records what was saved from it. That is the baseline for the AI work; `supabase/queries/usage.sql` turns it into numbers. e2e global setup and teardown delete the e2e user's log rows so tests don't skew it.
 
 ## Conventions
 

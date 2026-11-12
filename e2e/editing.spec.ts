@@ -68,6 +68,71 @@ test.describe('editing', () => {
     await expect(sheet.getByLabel('Item name')).toHaveValue('Teapot, blue')
   })
 
+  test('an edited item says so, to the owner and to friends', async ({ ownerPage: page, lists, newVisitor }) => {
+    const list = await lists.create('Edited mark', [
+      { title: 'Linen Shirt', price: 60 },
+      { title: 'Desk Plant', price: 20 },
+    ])
+    await page.goto(`/list/${list.id}`)
+    await expect(itemCard(page, 'Linen Shirt')).not.toContainText('Edited')
+
+    await itemCard(page, 'Linen Shirt').getByRole('button', { name: 'Edit Linen Shirt' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Edit item' })
+    await sheet.getByLabel('Note for gifters').fill('Size M, not L')
+    await sheet.getByRole('button', { name: 'Save changes' }).click()
+    await expect(sheet).toBeHidden()
+
+    await expect(itemCard(page, 'Linen Shirt')).toContainText('Edited')
+    await expect(itemCard(page, 'Desk Plant')).not.toContainText('Edited')
+
+    // Friends are the ones who need to look again before buying.
+    const friend = await newVisitor()
+    await friend.goto(`/w/${list.shareId}`)
+    await expect(itemCard(friend, 'Linen Shirt')).toContainText('Edited')
+    await expect(itemCard(friend, 'Desk Plant')).not.toContainText('Edited')
+  })
+
+  test('saving without changes, or only changing priority, does not mark an item edited', async ({
+    ownerPage: page,
+    lists,
+  }) => {
+    const list = await lists.create('Not edited', [{ title: 'Tea Tin' }])
+    await page.goto(`/list/${list.id}`)
+
+    await itemCard(page, 'Tea Tin').getByRole('button', { name: 'Edit Tea Tin' }).click()
+    let sheet = page.getByRole('dialog', { name: 'Edit item' })
+    await sheet.getByRole('button', { name: 'Save changes' }).click()
+    await expect(sheet).toBeHidden()
+
+    await itemCard(page, 'Tea Tin').getByRole('button', { name: 'Edit Tea Tin' }).click()
+    sheet = page.getByRole('dialog', { name: 'Edit item' })
+    await sheet.getByRole('button', { name: 'Top pick' }).click()
+    await sheet.getByRole('button', { name: 'Save changes' }).click()
+    await expect(sheet).toBeHidden()
+
+    await expect(itemCard(page, 'Tea Tin')).toContainText('Top pick')
+    await page.reload()
+    await expect(itemCard(page, 'Tea Tin')).toContainText('Top pick')
+    await expect(itemCard(page, 'Tea Tin')).not.toContainText('Edited')
+  })
+
+  test('the database owns the edited mark: it cannot be forged or cleared', async ({ lists, ownerDb }) => {
+    const list = await lists.create('Forge', [{ title: 'Kettle' }])
+    const id = list.items[0].id
+    const editedAt = async () =>
+      (await ownerDb.from('wishlist_items').select('edited_at').eq('id', id).single()).data?.edited_at
+
+    await ownerDb.from('wishlist_items').update({ edited_at: new Date().toISOString() }).eq('id', id)
+    expect(await editedAt()).toBeNull()
+
+    await ownerDb.from('wishlist_items').update({ title: 'Kettle, steel' }).eq('id', id)
+    const marked = await editedAt()
+    expect(marked).not.toBeNull()
+
+    await ownerDb.from('wishlist_items').update({ edited_at: null }).eq('id', id)
+    expect(await editedAt()).toBe(marked)
+  })
+
   test('edits the list title, occasion, date and note', async ({ ownerPage: page, lists }) => {
     const list = await lists.create('Brithday', [{ title: 'Kite' }])
     await page.goto(`/list/${list.id}`)

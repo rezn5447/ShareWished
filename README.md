@@ -30,7 +30,7 @@ cp .env.local.example .env.local
 | `CLERK_SECRET_KEY` | Clerk dashboard → your app → **API Keys** |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase dashboard → **Project Settings → API** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase dashboard → **Project Settings → API** (publishable / anon key) |
-| `NEXT_PUBLIC_SITE_URL` | Optional. Domain used in share links, e.g. `https://wishlisted.app`. Defaults to the domain the app is opened on. |
+| `NEXT_PUBLIC_SITE_URL` | Optional. Domain used in share links, e.g. `https://www.sharewished.app`. Defaults to the domain the app is opened on. |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | Optional. Inbox behind **Help & feedback** on the profile page. Leave unset to hide that row. |
 
 `.env.local` is gitignored. Never commit it.
@@ -161,3 +161,7 @@ Re-running the SQL replaces earlier seed data. Every list whose share id ends in
 ## Known gaps
 
 - **Product links:** [`app/api/link-preview`](app/api/link-preview/route.ts) reads a page's product details: schema.org product data, then Open Graph tags, then the page title. Shops that block bots, Amazon included, fall back to a name read from the link itself, and the price has to be typed in.
+
+## License
+
+MIT, see `LICENSE`.

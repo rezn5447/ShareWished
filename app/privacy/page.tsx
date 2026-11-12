@@ -3,7 +3,7 @@ import { MobileScreen } from '@/components/MobileScreen'
 import { TopBar } from '@/components/TopBar'
 
 export const metadata: Metadata = {
-  title: 'Privacy · Wishlisted',
+  title: 'Privacy · Gimme',
   description: 'How surprise mode works, and who can open your lists.',
 }
 
@@ -33,6 +33,7 @@ const sections = [
       "We don't sell your information, show ads, or share it with anyone beyond those services and the friends you send a link to.",
       'A friend\'s browser remembers the name they used and a private undo code for each gift they claimed. That stays on their device.',
       'When you paste a shop link, our server opens that page to read the product name, price and picture. Only the link is sent.',
+      "We keep a record of each link you look up: the link, the shop, what we could read from it, and what you saved. Other people using Gimme can't see yours. We use it to measure how well item details fill in, so we can improve it.",
     ],
   },
   {
@@ -46,6 +47,7 @@ const sections = [
     heading: 'Deleting',
     body: [
       'Removing an item, or deleting a list, removes it right away, along with any claims on it. A deleted list\'s link stops working.',
+      "Removing an item also removes the record of the link lookup it came from. To have the records of links you looked up but never saved deleted, ask us.",
     ],
   },
 ]

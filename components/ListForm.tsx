@@ -11,8 +11,13 @@ interface ListFormProps {
   savingLabel: string
   /** Shown when onSave rejects. */
   errorMessage: string
-  /** Resolves once saved. A rejection keeps the form open with errorMessage. */
-  onSave: (details: ListDetailsInput) => Promise<unknown>
+  /**
+   * Resolves once saved. A rejection keeps the form open with errorMessage.
+   * `ownerName` is set only when `askOwnerName` is on.
+   */
+  onSave: (details: ListDetailsInput, ownerName?: string) => Promise<unknown>
+  /** Adds a "Your name" field, for accounts that don't have a name to show friends. */
+  askOwnerName?: boolean
   disabled?: boolean
   /** Fields sit on the cream page or on a paper sheet; flip the fill so they stand out. */
   surface?: 'page' | 'sheet'
@@ -27,7 +32,9 @@ export function ListForm({
   onSave,
   disabled = false,
   surface = 'page',
+  askOwnerName = false,
 }: ListFormProps) {
+  const [ownerName, setOwnerName] = useState('')
   const [title, setTitle] = useState(initial?.title ?? '')
   const [cover, setCover] = useState<CoverKey>(initial?.cover ?? 'birthday')
   const [eventDate, setEventDate] = useState(initial?.eventDate ?? '')
@@ -41,7 +48,7 @@ export function ListForm({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!title.trim() || disabled || saving) return
+    if (!title.trim() || (askOwnerName && !ownerName.trim()) || disabled || saving) return
     setSaving(true)
     setError('')
     try {
@@ -52,7 +59,7 @@ export function ListForm({
         eventDate: eventDate || undefined,
         note: note.trim() || undefined,
         cover,
-      })
+      }, askOwnerName ? ownerName.trim() : undefined)
     } catch {
       setError(errorMessage)
     } finally {
@@ -61,6 +68,23 @@ export function ListForm({
   }
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {askOwnerName && (
+        <div>
+          <label htmlFor="list-owner-name" className="mb-1.5 block text-xs font-semibold text-ink">
+            Your name
+          </label>
+          <input
+            id="list-owner-name"
+            value={ownerName}
+            onChange={(event) => setOwnerName(event.target.value)}
+            placeholder="So friends know whose list it is"
+            autoComplete="name"
+            maxLength={60}
+            className={fieldClass}
+            required
+          />
+        </div>
+      )}
       <div>
         <label htmlFor="list-title" className="mb-1.5 block text-xs font-semibold text-ink">
           List name

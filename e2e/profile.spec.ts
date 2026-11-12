@@ -23,6 +23,13 @@ test.describe('profile', () => {
     await expect(page).toHaveURL(/\/profile$/)
   })
 
+  test('shows initials when the account has no photo', async ({ ownerPage: page }) => {
+    // The e2e owner signs in by email, so Clerk has no photo for them.
+    await page.goto('/profile')
+    await expect(page.getByTestId('profile-initials')).toBeVisible()
+    await expect(page.getByTestId('profile-photo')).toHaveCount(0)
+  })
+
   test('the privacy page is readable without signing in', async ({ page }) => {
     await page.goto('/privacy')
     await expect(page).toHaveURL(/\/privacy$/)

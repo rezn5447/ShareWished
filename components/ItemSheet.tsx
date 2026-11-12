@@ -1,18 +1,20 @@
 'use client'
-import React, { useRef, useState } from 'react'
-import { LinkIcon, Loader2Icon } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { CameraIcon, LinkIcon, Loader2Icon } from 'lucide-react'
 import { Sheet } from './Sheet'
-import { ItemDetailsInput } from '@/lib/wishlist-api'
+import { NewItemInput } from '@/lib/wishlist-api'
 import { LinkPreview, Priority, WishlistItem } from '@/types/wishlist'
 import { retailerFromUrl } from '@/utils/format'
 import { fetchLinkPreview, parseSharedText, PLACEHOLDER_IMAGE } from '@/utils/linkPreview'
+import { ItemImageError, shrinkItemImage, uploadedImagePath } from '@/utils/itemImage'
 interface ItemSheetProps {
   open: boolean
   onClose: () => void
   /** The item being edited. Leave out to add a new one. */
   item?: WishlistItem
   /** Resolves once saved. A rejection keeps the sheet open with an error. */
-  onSave: (input: ItemDetailsInput) => Promise<unknown>
+  /** Edits ignore `preview`; it only applies to new items. */
+  onSave: (input: NewItemInput) => Promise<unknown>
 }
 const priorities: Array<{ value: Priority; label: string }> = [
   { value: 'low', label: 'Nice to have' },
@@ -45,6 +47,34 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
   const [priority, setPriority] = useState<Priority>(item?.priority ?? 'normal')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  // A photo picked in this sheet, shrunk and waiting for save.
+  const [photo, setPhoto] = useState<{ blob: Blob; previewUrl: string } | null>(null)
+  const [shrinking, setShrinking] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  // A photo the owner uploaded earlier beats the shop's, even after the link changes.
+  const savedUpload = item && uploadedImagePath(item.image) ? item.image : null
+
+  useEffect(() => {
+    if (!photo) return
+    return () => URL.revokeObjectURL(photo.previewUrl)
+  }, [photo])
+
+  const pickPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    // Let the same file be picked again after an error or an undo.
+    event.target.value = ''
+    if (!file) return
+    setPhotoError('')
+    setShrinking(true)
+    try {
+      const blob = await shrinkItemImage(file)
+      setPhoto({ blob, previewUrl: URL.createObjectURL(blob) })
+    } catch (error) {
+      setPhotoError(error instanceof ItemImageError ? error.message : "Couldn't read that photo. Try a JPEG or PNG.")
+    } finally {
+      setShrinking(false)
+    }
+  }
   // Only the newest lookup may fill the form; older ones are for links since edited.
   // Starts at the saved link so just tabbing through an edit doesn't refetch it.
   const lookupFor = useRef(item?.url ?? '')
@@ -73,14 +103,17 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
   }
   /** Shop name and picture for the link being saved. */
   const linkDetails = (link: string) => {
-    // The lookup may be for an older link, or may not have finished.
-    if (preview && lookupFor.current === link) return { retailer: preview.retailer, image: preview.image }
-    if (item && item.url === link) return { retailer: item.retailer, image: item.image }
-    return { retailer: retailerFromUrl(link), image: PLACEHOLDER_IMAGE }
+    const details = (() => {
+      // The lookup may be for an older link, or may not have finished.
+      if (preview && lookupFor.current === link) return { retailer: preview.retailer, image: preview.image }
+      if (item && item.url === link) return { retailer: item.retailer, image: item.image }
+      return { retailer: retailerFromUrl(link), image: PLACEHOLDER_IMAGE }
+    })()
+    return savedUpload ? { ...details, image: savedUpload } : details
   }
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (saving) return
+    if (saving || shrinking) return
     const { url: link } = parseSharedText(url)
     if (!link) {
       setLinkError("That doesn't look like a link. Paste the full web address.")
@@ -94,9 +127,13 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
         title: title.trim(),
         url: link,
         ...linkDetails(link),
+        imageFile: photo?.blob,
         price: Number(price) || 0,
         note: note.trim() || undefined,
         priority,
+        preview: !item && preview?.previewId && lookupFor.current === link
+          ? { id: preview.previewId, filledTitle: preview.title }
+          : undefined,
       })
       onDone()
     } catch {
@@ -107,11 +144,34 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex gap-3">
-        <img
-          src={preview?.image ?? item?.image ?? PLACEHOLDER_IMAGE}
-          alt=""
-          className="h-16 w-16 shrink-0 rounded-xl border border-line object-cover"
-        />
+        <div className="relative shrink-0">
+          {/* The thumbnail is the photo picker. accept="image/*" lets iPhones hand over HEIC photos as JPEG. */}
+          <input
+            id="item-photo"
+            type="file"
+            accept="image/*"
+            onChange={pickPhoto}
+            aria-label={photo || savedUpload ? 'Change photo' : 'Add a photo'}
+            className="peer sr-only"
+          />
+          <label
+            htmlFor="item-photo"
+            className="block cursor-pointer rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-ink"
+          >
+            <img
+              src={photo?.previewUrl ?? savedUpload ?? preview?.image ?? item?.image ?? PLACEHOLDER_IMAGE}
+              alt=""
+              className="h-16 w-16 rounded-xl border border-line object-cover"
+            />
+            <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-paper text-ink shadow-card">
+              {shrinking ? (
+                <Loader2Icon className="h-3.5 w-3.5 animate-spin" aria-label="Preparing photo" />
+              ) : (
+                <CameraIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </span>
+          </label>
+        </div>
         <div className="min-w-0 flex-1">
           <label htmlFor="item-url" className="mb-1.5 block text-xs font-semibold text-ink">
             Link
@@ -144,6 +204,20 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
           </div>
         </div>
       </div>
+      {photoError && (
+        <p role="alert" className="text-xs font-medium text-accent">
+          {photoError}
+        </p>
+      )}
+      {photo && (
+        <button
+          type="button"
+          onClick={() => setPhoto(null)}
+          className="text-xs font-semibold text-muted underline underline-offset-2"
+        >
+          Don&apos;t use this photo
+        </button>
+      )}
       {linkError && (
         <p role="alert" className="text-xs font-medium text-accent">
           {linkError}
@@ -225,7 +299,7 @@ function ItemForm({ item, onSave, onDone }: ItemFormProps) {
       )}
       <button
         type="submit"
-        disabled={saving}
+        disabled={saving || shrinking}
         className="w-full rounded-full bg-accent py-3.5 text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-40"
       >
         {saving ? 'Saving…' : item ? 'Save changes' : 'Add to wishlist'}

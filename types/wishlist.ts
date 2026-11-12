@@ -15,6 +15,8 @@ export interface WishlistItem {
   note?: string
   priority: Priority
   addedAt: string
+  /** ISO date of the last change to the item's details. Set by the database; priority changes don't count. */
+  editedAt?: string
   /**
    * Only ever present on the visitor (gifter) view of a list.
    * The owner selectors strip this field so it can never be rendered to them.
@@ -47,4 +49,6 @@ export interface LinkPreview {
   retailer: string
   /** 'page' when the shop gave us details; 'link' when it's only a guess from the URL. */
   source: 'page' | 'link'
+  /** Row in `link_previews` for this lookup; absent if it couldn't be logged. */
+  previewId?: string
 }
